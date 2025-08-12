@@ -131,9 +131,14 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
 
         // Compute destination partition
         byte[] firstFourBytes = new byte[4];
+        // byte[] keyBytes = new byte[recordKey.limit()];
         recordValue.get(firstFourBytes);
+        // recordKey.get(keyBytes);
         recordValue.rewind();
+        // recordKey.rewind();
         int recordHash = this.hasher.hashBytesToInt(firstFourBytes, 0, firstFourBytes.length);
+        // int recordHash = this.hasher.hashBytesToInt(keyBytes, 0, keyBytes.length);
+        // int recordHash = Murmur3.hash32(keyBytes);
         int destinationPartition = outputPartitioner.getPartitionForRecordHash(recordHash);
         String destinationZone = outputPartitioner.getRackForPartition(destinationPartition);
 
