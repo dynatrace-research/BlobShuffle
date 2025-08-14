@@ -1,29 +1,20 @@
 package com.dynatrace.research.s3shuffler.kstreams;
 
-import com.dynatrace.hash4j.hashing.Hasher64;
-import com.dynatrace.hash4j.hashing.Hashing;
 import com.dynatrace.research.s3shuffler.BatchCollector;
 import com.dynatrace.research.s3shuffler.ObjectIdSupplier;
 import com.dynatrace.research.s3shuffler.OutputPartitioner;
 import com.dynatrace.research.s3shuffler.S3BatchFacade;
-import com.dynatrace.research.s3shuffler.util.ByteBuffers;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
-import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.processor.api.*;
 import org.apache.kafka.streams.processor.api.Record;
-import org.apache.kafka.streams.processor.internals.ProcessorNode;
-import org.apache.kafka.streams.state.KeyValueStore;
-import org.apache.kafka.streams.state.StoreBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -39,8 +30,6 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
     private final long batchDesiredBytes;
 
     private final Duration batchMaxDuration;
-
-    private final Hasher64 hasher = Hashing.komihash4_3(0x81c1f2b68968424dL);
 
     private final ObjectIdSupplier objectIdSupplier = new ObjectIdSupplier();
 
@@ -97,22 +86,13 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
         this.collectAsyncResults();
 
         // Extract record parts
-        ByteBuffer recordKey = ByteBuffers.wrapNullable(this.keySerde.serialize(DUMMY_TOPIC, record.key()));
-        ByteBuffer recordValue = ByteBuffers.wrapNullable(this.valueSerde.serialize(DUMMY_TOPIC, record.value()));
+        byte[] recordKey = this.keySerde.serialize(DUMMY_TOPIC, record.key());
+        byte[] recordValue = this.valueSerde.serialize(DUMMY_TOPIC, record.value());
         long recordTimestamp = record.timestamp();
         Headers recordHeaders = record.headers();
 
         // Compute destination partition
-        byte[] firstFourBytes = new byte[4];
-        // byte[] keyBytes = new byte[recordKey.limit()];
-        recordValue.get(firstFourBytes);
-        // recordKey.get(keyBytes);
-        recordValue.rewind();
-        // recordKey.rewind();
-        int recordHash = this.hasher.hashBytesToInt(firstFourBytes, 0, firstFourBytes.length);
-        // int recordHash = this.hasher.hashBytesToInt(keyBytes, 0, keyBytes.length);
-        // int recordHash = Murmur3.hash32(keyBytes);
-        int destinationPartition = outputPartitioner.getPartitionForRecordHash(recordHash);
+        int destinationPartition = outputPartitioner.getPartitionForRecordKey(recordKey);
         String destinationZone = outputPartitioner.getRackForPartition(destinationPartition);
 
         BatchCollector batchCollector = this.taskSharedBatcher.getBatchCollectors().computeIfAbsent(

@@ -84,6 +84,7 @@ public class KafkaStreamsS3ShufflerExample {
     switch (topology) {
         case FULL -> {
                 builder.stream(kafkaTopicInput, Consumed.with(Serdes.ByteArray(), Serdes.ByteArray()))
+                .selectKey((k,value) -> Arrays.copyOfRange(value, 0, 4))
                 .process(s3Shuffler.batcherSupplier())
                 //.foreach((dest, details) -> new String(dest + "->" + details));
                 .repartition(s3Shuffler.repartitioned())
@@ -92,6 +93,7 @@ public class KafkaStreamsS3ShufflerExample {
         }
         case BATCHER -> {
                 builder.stream(kafkaTopicInput, Consumed.with(Serdes.ByteArray(), Serdes.ByteArray()))
+                        .selectKey((k,value) -> Arrays.copyOfRange(value, 0, 4))
                         .process(s3Shuffler.batcherSupplier())
                         .repartition(s3Shuffler.repartitioned())
                         .foreach((dest, details) -> new String(dest + "->" + details));

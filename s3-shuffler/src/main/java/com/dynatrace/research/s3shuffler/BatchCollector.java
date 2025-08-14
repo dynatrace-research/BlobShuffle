@@ -23,7 +23,7 @@ public class BatchCollector {
         this.batchMaxBytes = batchMaxBytesPerPartition;
     }
 
-    public void addRecord(int outputPartition, ByteBuffer recordKey, ByteBuffer recordValue, long recordTimestamp, Headers recordHeaders) {
+    public void addRecord(int outputPartition, byte[] recordKey, byte[] recordValue, long recordTimestamp, Headers recordHeaders) {
         ByteBuffer buffer = byteBuffers.computeIfAbsent(outputPartition, d -> ByteBuffer.allocate(batchMaxBytes));
 
         // Add partition
@@ -34,7 +34,7 @@ public class BatchCollector {
             buffer.putInt(-1); // no key
         }
         else {
-            buffer.putInt(recordKey.limit()); // key size
+            buffer.putInt(recordKey.length); // key size
             buffer.put(recordKey); // key content
         }
 
@@ -43,7 +43,7 @@ public class BatchCollector {
             buffer.putInt(-1); // no value
         }
         else {
-            buffer.putInt(recordValue.limit()); // value size
+            buffer.putInt(recordValue.length); // value size
             buffer.put(recordValue); // value content
         }
 
