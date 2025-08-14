@@ -170,8 +170,8 @@ public class BatchCollectorTest {
         for (int partition = 10; partition >= 1; partition--) {
             for (int i = 1; i <= partition; i++) {
                 timestamp++;
-                ByteBuffer recordKey = ByteBuffer.wrap(("key_" + timestamp).getBytes(StandardCharsets.UTF_8));
-                ByteBuffer recordValue = ByteBuffer.wrap(("value_" + timestamp).getBytes(StandardCharsets.UTF_8));
+                byte[] recordKey = ("key_" + timestamp).getBytes(StandardCharsets.UTF_8);
+                byte[] recordValue = ("value_" + timestamp).getBytes(StandardCharsets.UTF_8);
                 RecordHeaders recordHeaders = new RecordHeaders();
                 batchCollector.addRecord(partition, recordKey, recordValue, timestamp, recordHeaders);
             }
