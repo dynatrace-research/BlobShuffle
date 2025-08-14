@@ -29,7 +29,7 @@ public abstract class AbstractCommitListenerProcessorSupplier<KIn, VIn, KOut, VO
     public Set<StoreBuilder<?>> stores() {
         final StoreBuilder<KeyValueStore<Bytes, byte[]>> storeBuilder = new FlushListenerStoreBuilder(
                 this.processorFlushStoreRegistry,
-                this.storeName);
+                this.storeName).withLoggingDisabled();
         return Set.of(storeBuilder);
     }
 }
