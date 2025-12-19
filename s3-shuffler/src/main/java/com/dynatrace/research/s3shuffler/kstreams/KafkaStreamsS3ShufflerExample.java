@@ -1,9 +1,6 @@
 package com.dynatrace.research.s3shuffler.kstreams;
 
-import com.dynatrace.research.s3shuffler.BasicS3BatchFacade;
-import com.dynatrace.research.s3shuffler.CacheConfig;
-import com.dynatrace.research.s3shuffler.Partitioner;
-import com.dynatrace.research.s3shuffler.S3BatchFacade;
+import com.dynatrace.research.s3shuffler.*;
 import com.sun.net.httpserver.HttpServer;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -56,7 +53,8 @@ public class KafkaStreamsS3ShufflerExample {
           Optional<String> zone,
           S3Client s3Client,
           String bucketName,
-          CacheConfig cacheConfig,
+          LocalCacheConfig localCacheConfig,
+          DistributedCacheConfig distributedCacheConfig,
           String kafkaBootstrapServers,
           String kafkaTopicInput,
           String kafkaTopicNotifications,
@@ -79,23 +77,21 @@ public class KafkaStreamsS3ShufflerExample {
 
     final MeterRegistry meterRegistry = getRegistry();
 
-    if (cacheConfig.cacheDistributedEnabled()) {
-      LOGGER.info("Use distributed cache of size {} bytes.", cacheConfig.cacheDistributedSizeBytes());
+    if (distributedCacheConfig.enabled()) {
+      LOGGER.info("Use distributed cache of size {} bytes.", distributedCacheConfig.sizeInBytes());
     } else {
       LOGGER.info("Do not use distributed cache.");
     }
-    if (cacheConfig.cacheLocalEnabled()) {
-      LOGGER.info("Use local cache of size {} bytes.", cacheConfig.cacheLocalSizeBytes());
+    if (localCacheConfig.enabled()) {
+      LOGGER.info("Use local cache of size {} bytes.", localCacheConfig.sizeInBytes());
     } else {
       LOGGER.info("Do not use local cache.");
     }
     S3Shuffler<byte[], byte[]> s3Shuffler = new S3Shuffler<>(
-            cacheConfig.toS3BatchFacade(
-                    zone.orElse("all"),
-                    s3Client,
-                    bucketName,
-                    batchDesiredBytes,
-                    meterRegistry),
+            new S3Config(s3Client, bucketName),
+            localCacheConfig,
+            distributedCacheConfig,
+            zone.orElse("all"),
             Serdes.ByteArray(),
             Serdes.ByteArray(),
             batchDesiredBytes,
@@ -269,18 +265,22 @@ public class KafkaStreamsS3ShufflerExample {
 
     boolean cacheLocalEnabled = config.getValue("cache.local.enabled", Boolean.class);
     long cacheLocalSizeBytes = config.getValue("cache.local.size.bytes", Long.class);
+    boolean cacheLocalOnWrite = config.getValue("cache.local.on.write", Boolean.class);
+    LocalCacheConfig localCacheConfig = new LocalCacheConfig(cacheLocalEnabled, cacheLocalSizeBytes, cacheLocalOnWrite);
     boolean cacheDistributedEnabled = config.getValue("cache.distributed.enabled", Boolean.class);
     long cacheDistributedSizeBytes = config.getValue("cache.distributed.size.bytes", Long.class);
+    boolean cacheDistributedOnWrite = config.getValue("cache.distributed.on.write", Boolean.class);
     String cacheDistributedAdvertisedHost = config.getValue("cache.distributed.advertised.host", String.class);
     int cacheDistributedPort = config.getValue("cache.distributed.port", Integer.class);
-    CacheConfig cacheConfig = new CacheConfig(cacheLocalEnabled, cacheLocalSizeBytes, cacheDistributedEnabled, cacheDistributedSizeBytes, cacheDistributedAdvertisedHost, cacheDistributedPort);
+    DistributedCacheConfig distributedCacheConfig = new DistributedCacheConfig(cacheDistributedEnabled, cacheDistributedSizeBytes, cacheDistributedOnWrite, cacheDistributedAdvertisedHost, cacheDistributedPort);
 
     KafkaStreamsS3ShufflerExample kafkaStreamsS3Shuffler = new KafkaStreamsS3ShufflerExample(
             topology,
             zone,
             s3Client,
             bucketName,
-            cacheConfig,
+            localCacheConfig,
+            distributedCacheConfig,
             kafkaBootstrapServers,
             inputTopicName,
             notificationTopicName,
