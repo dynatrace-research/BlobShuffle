@@ -27,10 +27,7 @@
  */
 package com.dynatrace.research.s3shuffler.kstreams;
 
-import com.dynatrace.research.s3shuffler.OutputPartitioner;
-import com.dynatrace.research.s3shuffler.Partitioner;
-import com.dynatrace.research.s3shuffler.Refresher;
-import com.dynatrace.research.s3shuffler.S3BatchFacade;
+import com.dynatrace.research.s3shuffler.*;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -81,18 +78,36 @@ public class S3Shuffler<K,V> {
     private final TaskSharedBatcher taskSharedBatcher = new TaskSharedBatcher(); // TODO Has to be per thread
 
     public S3Shuffler(
-            S3BatchFacade s3BatchFacade,
+            S3Config s3Config,
+            LocalCacheConfig localCacheConfig,
+            DistributedCacheConfig distributedCacheConfig,
+            String zone,
             Serde<K> keySerde,
             Serde<V> valueSerde,
             long batchDesiredBytes,
             Duration batchMaxDuration,
             String repartitionName,
             Duration kafkaRackAssignmentRefreshInterval) {
-        this(s3BatchFacade, keySerde, valueSerde, batchDesiredBytes, batchMaxDuration, repartitionName, null, kafkaRackAssignmentRefreshInterval, new SimpleMeterRegistry());
+        this(
+                s3Config,
+                localCacheConfig,
+                distributedCacheConfig,
+                zone,
+                keySerde,
+                valueSerde,
+                batchDesiredBytes,
+                batchMaxDuration,
+                repartitionName,
+                Partitioner.KAFKA_BUILTIN,
+                kafkaRackAssignmentRefreshInterval,
+                new SimpleMeterRegistry());
     }
 
     public S3Shuffler(
-            S3BatchFacade s3BatchFacade,
+            S3Config s3Config,
+            LocalCacheConfig localCacheConfig,
+            DistributedCacheConfig distributedCacheConfig,
+            String zone,
             Serde<K> keySerde,
             Serde<V> valueSerde,
             long batchDesiredBytes,
@@ -101,11 +116,27 @@ public class S3Shuffler<K,V> {
             Partitioner partitioner,
             Duration kafkaRackAssignmentRefreshInterval,
             MeterRegistry meterRegistry) {
-        this(s3BatchFacade, keySerde, valueSerde, batchDesiredBytes, batchMaxDuration, repartitionName, Partitioner.KAFKA_BUILTIN, new HashMap<>(), kafkaRackAssignmentRefreshInterval, meterRegistry);
+        this(
+                s3Config,
+                localCacheConfig,
+                distributedCacheConfig,
+                zone,
+                keySerde,
+                valueSerde,
+                batchDesiredBytes,
+                batchMaxDuration,
+                repartitionName,
+                partitioner,
+                new HashMap<>(),
+                kafkaRackAssignmentRefreshInterval,
+                meterRegistry);
     }
 
     public S3Shuffler(
-            S3BatchFacade s3BatchFacade,
+            S3Config s3Config,
+            LocalCacheConfig localCacheConfig,
+            DistributedCacheConfig distributedCacheConfig,
+            String zone,
             Serde<K> keySerde,
             Serde<V> valueSerde,
             long batchDesiredBytes,
@@ -114,11 +145,27 @@ public class S3Shuffler<K,V> {
             Partitioner partitioner,
             Map<Integer, String> staticOutputPartitionsToRacks,
             Duration kafkaRackAssignmentRefreshInterval) {
-        this(s3BatchFacade, keySerde, valueSerde, batchDesiredBytes, batchMaxDuration, repartitionName, partitioner, staticOutputPartitionsToRacks, kafkaRackAssignmentRefreshInterval, new SimpleMeterRegistry());
+        this(
+                s3Config,
+                localCacheConfig,
+                distributedCacheConfig,
+                zone,
+                keySerde,
+                valueSerde,
+                batchDesiredBytes,
+                batchMaxDuration,
+                repartitionName,
+                partitioner,
+                staticOutputPartitionsToRacks,
+                kafkaRackAssignmentRefreshInterval,
+                new SimpleMeterRegistry());
     }
 
     public S3Shuffler(
-            S3BatchFacade s3BatchFacade,
+            S3Config s3Config,
+            LocalCacheConfig localCacheConfig,
+            DistributedCacheConfig distributedCacheConfig,
+            String zone,
             Serde<K> keySerde,
             Serde<V> valueSerde,
             long batchDesiredBytes,
@@ -131,7 +178,16 @@ public class S3Shuffler<K,V> {
             //Refresher rackAssignmentRefresher,
             //String applicationId, // TODO Try to avoid passing this
             //String bootstrapServers) { // TODO Try to avoid passing this
-        this.s3BatchFacade = s3BatchFacade;
+        this.s3BatchFacade = distributedCacheConfig
+                .maybeWrapS3BatchFacade(
+                        localCacheConfig.maybeWrapS3BatchFacade(
+                                s3Config.toS3BatchFacade(meterRegistry),
+                                batchDesiredBytes,
+                                meterRegistry
+                        ),
+                        zone,
+                        batchDesiredBytes,
+                        meterRegistry);
         this.keySerde = keySerde;
         this.valueSerde = valueSerde;
         this.batchDesiredBytes = batchDesiredBytes;
