@@ -2,21 +2,21 @@ package com.dynatrace.research.s3shuffler.kstreams;
 
 import com.dynatrace.research.s3shuffler.BatchReader;
 import com.dynatrace.research.s3shuffler.S3BatchFacade;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.processor.api.*;
 import org.apache.kafka.streams.processor.api.Record;
-import org.apache.kafka.streams.state.KeyValueStore;
-import org.apache.kafka.streams.state.StoreBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,25 +32,48 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
 
     private final Deserializer<V> valueSerde;
 
-    public static final AtomicInteger FORWARD_COUNTER = new AtomicInteger(); // TODO TEMP DEBUG
+    private final Timer throttleTimer;
 
-    public S3DebatcherProcessor(S3BatchFacade s3BatchFacade, Serde<K> keySerde, Serde<V> valueSerde, ProcessorFlushStoreRegistry processorFlushStoreRegistry) {
+    private final AtomicInteger inFlightGauge;
+
+    private final MeterRegistry meterRegistry;
+
+    public S3DebatcherProcessor(S3BatchFacade s3BatchFacade, Serde<K> keySerde, Serde<V> valueSerde, MeterRegistry registry, ProcessorFlushStoreRegistry processorFlushStoreRegistry) {
         super(processorFlushStoreRegistry);
         this.s3BatchFacade = s3BatchFacade;
         this.keySerde = keySerde.deserializer();
         this.valueSerde = valueSerde.deserializer();
+
+        this.throttleTimer = Timer.builder("debatcher.throttle.time")
+                .description("time throttled in the debatcher") // optional
+                //.tags("region", "test") // optional
+                .publishPercentiles(0.5, 0.95, 0.99, 0.999) // median and 95th, 99th and 99.9th percentile
+                .publishPercentileHistogram()
+                //.serviceLevelObjectives(Duration.ofMillis(100))
+                .minimumExpectedValue(Duration.ofMillis(1))
+                .maximumExpectedValue(Duration.ofSeconds(60))
+                .register(registry);
+        this.inFlightGauge = new AtomicInteger(0);
+        this.meterRegistry = registry;
     }
 
     @Override
     public void init(ProcessorContext<K, V> context) {
         super.init(context);
+        Gauge.builder("debatcher.inflight.requests", this.inFlightGauge, AtomicInteger::doubleValue)
+                .description("number of in-flight requests")
+                //.tags("region", "test") // optional
+                .tag("task_id", context.taskId().toString())
+                .register(meterRegistry);
     }
 
     @Override
     public void process(Record<NotificationDestination, NotificationDetails> notification) {
+        // TODO Temp
+        LOGGER.info("########## Repartitioned to {}; ts: {}; details: {}", notification.key(), notification.timestamp(), notification.value());
+
         // Before processing the new record, we first collect the results of all async calls that have finished in the meantime
         this.collectAsyncResults();
-
 
         String objectPath = notification.value().objectPath();
         int offsetStart = notification.value().offsetStartInclusive();
@@ -66,11 +89,9 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
 
     @Override
     public void preCommit() { // TODO maybe protected
-        System.out.println("Started commit process in debatcher. Have to wait for all pending S3 fetches.");
-
-        System.out.println("Collect all async results now.");
+        LOGGER.info("Start commit process. Wait for all pending S3 fetches.");
         this.drainAsyncResults(); // Might block if the results to be collected
-        System.out.println("All results have been collected and output records should have been forwarded.");
+        LOGGER.info("All results have been collected and output records have been forwarded.");
     }
 
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
@@ -85,25 +106,34 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
     // TODO move up this file
 
     // Per task
-    private final int maxInFlightWritesPerTask = 6;
+    private final int maxInFlightWritesPerTask = 6; // * 8; // TODO Make configurable
+    // TODO Temporary value
+    // TODO static is just a very ugly hack for now
 
     // Per task
-    private final Semaphore inFlights = new Semaphore(maxInFlightWritesPerTask);
+    private final Semaphore inFlights = new Semaphore(maxInFlightWritesPerTask); // TODO static is just a very ugly hack for now
 
     private void readBatchAsync(String objectPath, int offsetStart, int offsetEnd) {
 
         // Block if too many in-flight calls
-        try {
-            inFlights.acquire();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        if (!inFlights.tryAcquire()) {
+            LOGGER.info("Throttle batch reading.");
+            this.throttleTimer.record(() -> {
+                try {
+                    inFlights.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
+        this.inFlightGauge.incrementAndGet();
+
         //this.pendingEvents.put(objectPath, new Object());
         pendingEvents++;
 
         LOGGER.info("Start async fetching batch from object {} for offset range {}:{}.", objectPath, offsetStart, offsetEnd);
 
-        // Perform actual send
+        // Perform actual fetch
         CompletableFuture.supplyAsync(() -> {
                     long startTime = System.currentTimeMillis(); // Use monitoring framework
                     // Blocking call!
@@ -121,6 +151,7 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
                     }
                     this.finishedAsyncCalls.add(batch);
                     inFlights.release();
+                    this.inFlightGauge.decrementAndGet();
                 });
     }
 
@@ -129,7 +160,6 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
         while (!this.finishedAsyncCalls.isEmpty()) {
             AsyncResult<BatchReader> asyncResult = this.finishedAsyncCalls.poll();
             if (asyncResult.isFailed()) {
-                System.out.println("Received a failed result in collectAsyncResults. Rethrow exception!");
                 // TODO Make custom exception
                 throw new RuntimeException(asyncResult.getException());
             }
@@ -141,10 +171,9 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
     }
 
     private void drainAsyncResults() {
-        System.out.println("Block for all results to be available.");
         // Call only after all calls have been scheduled
+        LOGGER.info("Block for {} pending results to be available.", this.pendingEvents);
         //while (!this.pendingEvents.isEmpty()) {
-        System.out.println("We wait for " + this.pendingEvents + " pending events.");
         while (this.pendingEvents != 0) {
             // Process one result in each iteration
             // Block if necessary
@@ -155,7 +184,6 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
                 throw new RuntimeException(e);
             }
             if (asyncResult.isFailed()) {
-                System.out.println("Received a failed result in drainAsyncResults. Rethrow exception!");
                 // TODO Make custom exception
                 throw new RuntimeException(asyncResult.getException());
             }
@@ -181,8 +209,6 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
             long timestamp = batchReader.readRecordTimestamp();
             List<Header> headers = batchReader.readHeaders();
             Record<K, V> record = new Record<>(key, value, timestamp, new RecordHeaders(headers));
-            //System.out.println(record);
-            FORWARD_COUNTER.incrementAndGet(); //TODO remove
             context().forward(record);
         }
     }
@@ -195,11 +221,14 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
 
         private final Serde<V> valueSerde;
 
-        public Supplier(S3BatchFacade s3BatchFacade, Serde<K> keySerde, Serde<V> valueSerde) {
+        private final MeterRegistry meterRegistry;
+
+        public Supplier(S3BatchFacade s3BatchFacade, Serde<K> keySerde, Serde<V> valueSerde, MeterRegistry meterRegistry) {
             super("DUMMY-DEBATCH");
             this.s3BatchFacade = s3BatchFacade;
             this.keySerde = keySerde;
             this.valueSerde = valueSerde;
+            this.meterRegistry = meterRegistry;
         }
 
         @Override
@@ -208,6 +237,7 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
                     this.s3BatchFacade,
                     this.keySerde,
                     this.valueSerde,
+                    this.meterRegistry,
                     processorFlushStoreRegistry);
         }
 
