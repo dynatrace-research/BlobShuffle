@@ -27,7 +27,10 @@
  */
 package com.dynatrace.research.s3shuffler;
 
-import com.dynatrace.research.s3shuffler.util.DelegatingInputStream;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -38,6 +41,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 
 public class BasicS3BatchFacade implements S3BatchFacade {
 
@@ -47,18 +51,62 @@ public class BasicS3BatchFacade implements S3BatchFacade {
 
     private final String bucketName;
 
+    private final MeterRegistry meterRegistry;
+
+    private final Counter putsCounter;
+
+    private final Counter getsCounter;
+
+    private final Timer putsTimer;
+
+    private final Timer getsTimer;
+
     public BasicS3BatchFacade(S3Client s3Client, String bucketName) {
+        this(s3Client, bucketName, new SimpleMeterRegistry());
+    }
+
+    public BasicS3BatchFacade(S3Client s3Client, String bucketName, MeterRegistry meterRegistry) {
         this.s3Client = s3Client;
         this.bucketName = bucketName;
+        this.meterRegistry = meterRegistry;
+        this.putsCounter = Counter
+                .builder("s3.objects.puts")
+                .description("number of PUT requests to S3")
+                .register(meterRegistry);
+        this.getsCounter = Counter
+                .builder("s3.objects.gets")
+                .description("number of GET requests to S3")
+                .register(meterRegistry);
+        this.putsTimer = Timer.builder("s3.objects.put.latency")
+                .description("time for PUT requests to S3") // optional
+                //.tags("region", "test") // optional
+                .publishPercentiles(0.5, 0.95, 0.99, 0.999) // median and 95th, 99th and 99.9th percentile
+                .publishPercentileHistogram()
+                //.serviceLevelObjectives(Duration.ofMillis(100))
+                .minimumExpectedValue(Duration.ofMillis(1))
+                .maximumExpectedValue(Duration.ofSeconds(60))
+                .register(meterRegistry);
+        this.getsTimer = Timer.builder("s3.objects.get.latency")
+                .description("time for GET requests to S3") // optional
+                //.tags("region", "test") // optional
+                .publishPercentiles(0.5, 0.95, 0.99, 0.999) // median and 95th, 99th and 99.9th percentile
+                .publishPercentileHistogram()
+                //.serviceLevelObjectives(Duration.ofMillis(100))
+                .minimumExpectedValue(Duration.ofMillis(1))
+                .maximumExpectedValue(Duration.ofSeconds(60))
+                .register(meterRegistry);
     }
 
     @Override
     public void writeBatch(String objectPath, InputStream batchInputStream, int batchSizeInBytes) {
-        PutObjectResponse response = s3Client.putObject(request ->
-                        request
-                                .bucket(bucketName)
-                                .key(objectPath),
-                RequestBody.fromInputStream(batchInputStream, batchSizeInBytes));
+        PutObjectResponse response = this.putsTimer.record(() ->
+                s3Client.putObject(request ->
+                                request
+                                        .bucket(bucketName)
+                                        .key(objectPath),
+                        RequestBody.fromInputStream(batchInputStream, batchSizeInBytes))
+        );
+        this.putsCounter.increment();
         try {
             batchInputStream.close();
         } catch (IOException e) {
@@ -71,9 +119,13 @@ public class BasicS3BatchFacade implements S3BatchFacade {
     @Override
     public SizeAwareInputStream readBatch(String objectPath) {
         LOGGER.info("Fetch batch from object {}.", objectPath);
-        ResponseInputStream<GetObjectResponse> batchInputStream = s3Client.getObject(request -> request
-                .bucket(this.bucketName)
-                .key(objectPath));
+        ResponseInputStream<GetObjectResponse> batchInputStream = this.getsTimer.record(() ->
+                s3Client.getObject(request ->
+                        request
+                                .bucket(this.bucketName)
+                                .key(objectPath))
+        );
+        this.getsCounter.increment();
         long batchSize = batchInputStream.response().contentLength(); // TODO check if works as expected
         if (batchSize >= Integer.MAX_VALUE) {
             throw new RuntimeException("Object " + objectPath + " too large for a byte[]");
@@ -81,22 +133,9 @@ public class BasicS3BatchFacade implements S3BatchFacade {
         return new SizeAwareInputStream(batchInputStream, (int) batchSize);
     }
 
-    public S3BatchFacade withCache(int cacheSize, boolean cacheOnWrite) {
-        return new CachingS3BatchFacade(this, cacheSize, cacheOnWrite);
-    }
-
-    public static class SizeAwareInputStream extends DelegatingInputStream {
-
-        private final int size;
-
-        public SizeAwareInputStream(InputStream delegate, int size) {
-            super(delegate);
-            this.size = size;
-        }
-
-        public int size() {
-            return this.size;
-        }
+    @Deprecated
+    public S3BatchFacade withLocalCache(int cacheSize, boolean cacheOnWrite) {
+        return new CachingS3BatchFacade(this, cacheSize, cacheOnWrite, this.meterRegistry, "local");
     }
 
 }

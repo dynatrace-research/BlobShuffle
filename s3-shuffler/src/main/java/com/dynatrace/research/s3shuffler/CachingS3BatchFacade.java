@@ -27,6 +27,9 @@
  */
 package com.dynatrace.research.s3shuffler;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,19 +44,48 @@ public class CachingS3BatchFacade implements S3BatchFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CachingS3BatchFacade.class);
 
-    private final BasicS3BatchFacade wrapped;
+    private final S3BatchFacade wrapped;
 
     private final boolean cacheOnWrite;
 
     private final S3Cache s3Cache;
 
+    private final ConcurrentHashMap<String, Object> everCached = new ConcurrentHashMap<>(); // TODO Debug: track all ever seen objects
+
+    private static final Object DUMMY = new Object();
+
     private final Map<String, CountDownLatch> pendingReads;
 
-    public CachingS3BatchFacade(BasicS3BatchFacade wrapped, int cacheSize, boolean cacheOnWrite) {
+    private final MeterRegistry metricRegistry;
+    private final Counter cacheHitsCounter;
+    private final Counter cacheMissesCounter;
+    private final Counter cacheDeletedMissesCounter; //TODO Debug
+
+    public CachingS3BatchFacade(S3BatchFacade wrapped, int cacheSize, boolean cacheOnWrite) {
+        this(wrapped, cacheSize, cacheOnWrite, new SimpleMeterRegistry(), "");
+    }
+
+    public CachingS3BatchFacade(S3BatchFacade wrapped, int cacheSize, boolean cacheOnWrite, MeterRegistry metricRegistry, String metricsTypeValue) {
         this.wrapped = wrapped;
         this.cacheOnWrite = cacheOnWrite;
         this.s3Cache = new S3Cache(cacheSize);
         this.pendingReads =  new ConcurrentHashMap<>();
+        this.metricRegistry = metricRegistry;
+        this.cacheHitsCounter = Counter
+                .builder("s3.cache.hits")
+                .description("number of hits on the cache")
+                .tag("type", metricsTypeValue)
+                .register(metricRegistry);
+        this.cacheMissesCounter = Counter
+                .builder("s3.cache.misses")
+                .description("number of misses on the cache")
+                .tag("type", metricsTypeValue)
+                .register(metricRegistry);
+        this.cacheDeletedMissesCounter = Counter
+                .builder("s3.cache.misses.deleted")
+                .description("number of deleted misses on the cache")
+                .tag("type", metricsTypeValue)
+                .register(metricRegistry);
     }
 
     public void writeBatch(String objectPath, InputStream batchInputStream, int batchSizeInBytes) {
@@ -61,21 +93,23 @@ public class CachingS3BatchFacade implements S3BatchFacade {
         if (this.cacheOnWrite) {
             byte[] readBatch = loadBatchInputStream(batchInputStream, batchSizeInBytes);
             s3Cache.putObject(objectPath, readBatch); // Maybe put to cache _after_ put to S3 (?)
-            System.out.println("Write to cache: " + objectPath + " (" + batchSizeInBytes + " bytes)");
+            this.everCached.put(objectPath, DUMMY); //TODO Temp
+            //System.out.println("Write to cache: " + objectPath + " (" + batchSizeInBytes + " bytes)");
             maybeWrappedInputStream = new ByteArrayInputStream(readBatch);
         } else {
             maybeWrappedInputStream = batchInputStream;
         }
-        System.out.println("Write to S3: " + objectPath + " (" + batchSizeInBytes + " bytes)");
+        //System.out.println("Write to S3: " + objectPath + " (" + batchSizeInBytes + " bytes)");
         this.wrapped.writeBatch(objectPath, maybeWrappedInputStream, batchSizeInBytes);
     }
 
-    public InputStream readBatch(String objectPath) {
+    public SizeAwareInputStream readBatch(String objectPath) {
         while (true) {
             byte[] cachedObject = this.s3Cache.getObject(objectPath);
             if (cachedObject != null) {
-                System.out.println("Read from cache: " + objectPath + " (" + cachedObject.length + " bytes)");
-                return new ByteArrayInputStream(cachedObject);
+                //System.out.println("Read from cache: " + objectPath + " (" + cachedObject.length + " bytes)");
+                this.cacheHitsCounter.increment();
+                return new SizeAwareInputStream(new ByteArrayInputStream(cachedObject), cachedObject.length);
             }
 
             // Check if someone already requested a read
@@ -84,11 +118,18 @@ public class CachingS3BatchFacade implements S3BatchFacade {
                 // First thread to process this objectPath
                 latch = this.pendingReads.get(objectPath);
                 try {
-                    System.out.println("Query from S3: " + objectPath + "");
-                    BasicS3BatchFacade.SizeAwareInputStream batchInputStream = this.wrapped.readBatch(objectPath);
+                    //System.out.println("Query from S3: " + objectPath + "");
+                    if (this.everCached.putIfAbsent(objectPath, DUMMY) != null) { // TODO Temp
+                        // Object was already cached before, but is now put to the cache again
+                        this.cacheDeletedMissesCounter.increment();
+                        //return new SizeAwareInputStream(new ByteArrayInputStream(DUMMY_), readBatch.length);
+                    }
+
+                    this.cacheMissesCounter.increment();
+                    S3BatchFacade.SizeAwareInputStream batchInputStream = this.wrapped.readBatch(objectPath);
                     byte[] readBatch = loadBatchInputStream(batchInputStream, batchInputStream.size());
                     this.s3Cache.putObject(objectPath, readBatch);
-                    return new ByteArrayInputStream(readBatch);
+                    return new SizeAwareInputStream(new ByteArrayInputStream(readBatch), readBatch.length);
                 } finally {
                     latch.countDown();
                     this.pendingReads.remove(objectPath);

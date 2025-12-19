@@ -36,19 +36,20 @@ import java.util.*;
 
 public class OutputPartitioner {
 
+    private final Partitioner partitioner;
+
     private Map<Integer,String> partitionsToRack;
 
     private final Hasher64 hasher = Hashing.komihash4_3(0x81c1f2b68968424dL);
 
-    public OutputPartitioner(Map<Integer,String> partitionsToRack) {
+    public OutputPartitioner(Partitioner partitioner, Map<Integer,String> partitionsToRack) {
+        this.partitioner = partitioner;
         this.partitionsToRack = partitionsToRack;
     }
 
     public int getPartitionForRecordKey(byte[] recordKey) {
         int numPartitions = partitionsToRack.size();
-        //return BuiltInPartitioner.partitionForKey(recordKey, numPartitions);
-        int keyHash = this.hasher.hashBytesToInt(recordKey, 0, recordKey.length);
-        return Utils.toPositive(keyHash) % numPartitions;
+        return this.partitioner.getPartitionForRecordKey(recordKey, numPartitions);
     }
 
     public String getRackForPartition(int partition) {
@@ -58,6 +59,10 @@ public class OutputPartitioner {
     public String getRackForRecordKey(byte[] recordKey) {
         int partition = getPartitionForRecordKey(recordKey);
         return getRackForPartition(partition);
+    }
+
+    public int getNumberOfPartitions() {
+        return this.partitionsToRack.size();
     }
 
     public void setOutputPartitionsToRack(Map<Integer, String> partitionsToRack) {

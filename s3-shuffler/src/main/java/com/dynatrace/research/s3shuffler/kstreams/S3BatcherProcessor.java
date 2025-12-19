@@ -31,6 +31,9 @@ import com.dynatrace.research.s3shuffler.BatchCollector;
 import com.dynatrace.research.s3shuffler.ObjectIdSupplier;
 import com.dynatrace.research.s3shuffler.OutputPartitioner;
 import com.dynatrace.research.s3shuffler.S3BatchFacade;
+import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
@@ -54,6 +57,8 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
 
     private static final String DUMMY_TOPIC = "";
 
+    public static final int MAX_PARTITION_SKEW = 4; // Max. tolerable difference on load on a partition vs. the avg. across partitions
+
     private final long batchDesiredBytes;
 
     private final Duration batchMaxDuration;
@@ -72,9 +77,9 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
 
     private final Consumer<ProcessorContext<NotificationDestination, NotificationDetails>> onInitCallback;
 
-    public static final AtomicInteger COUNTER = new AtomicInteger(); // TODO TEMP DEBUG
+    private final DistributionSummary batchSizeSummary;
 
-    public static final AtomicInteger BATCH_ADD_COUNTER = new AtomicInteger(); // TODO TEMP DEBUG
+    private final Timer throttleTimer;
 
     private S3BatcherProcessor(
             S3BatchFacade s3BatchFacade,
@@ -85,6 +90,7 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
             Duration batchMaxDuration,
             TaskSharedBatcher taskSharedBatcher,
             Consumer<ProcessorContext<NotificationDestination, NotificationDetails>> onInitCallback,
+            MeterRegistry registry,
             ProcessorFlushStoreRegistry processorFlushStoreRegistry) {
         super(processorFlushStoreRegistry);
         this.s3BatchFacade = s3BatchFacade;
@@ -95,6 +101,24 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
         this.batchMaxDuration = batchMaxDuration;
         this.taskSharedBatcher = taskSharedBatcher;
         this.onInitCallback = onInitCallback;
+
+        this.batchSizeSummary = DistributionSummary
+                .builder("batch.size")
+                .baseUnit("bytes") // optional
+                //.tags("region", "test") // optional
+                .minimumExpectedValue((double) 1024 * 1024) // 1 MB
+                .maximumExpectedValue((double) 1024 * 1024 * 1024) // 1 GB
+                //.scale(100) // optional
+                .register(registry);
+        this.throttleTimer = Timer.builder("batcher.throttle.time")
+                .description("time throttled in the batcher") // optional
+                //.tags("region", "test") // optional
+                .publishPercentiles(0.5, 0.95, 0.99, 0.999) // median and 95th, 99th and 99.9th percentile
+                .publishPercentileHistogram()
+                //.serviceLevelObjectives(Duration.ofMillis(100))
+                .minimumExpectedValue(Duration.ofMillis(1))
+                .maximumExpectedValue(Duration.ofSeconds(60))
+                .register(registry);
     }
 
     @Override
@@ -106,8 +130,6 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
 
     @Override
     public void process(Record<K, V> record) {
-        //System.out.println("Got record");
-        COUNTER.incrementAndGet();
 
         // Before processing the new record, we first collect the results of all async calls that have finished in the meantime
         this.collectAsyncResults();
@@ -124,7 +146,9 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
 
         BatchCollector batchCollector = this.taskSharedBatcher.getBatchCollectors().computeIfAbsent(
                 destinationZone,
-                d -> new BatchCollector(10 * 1024 * 1024));
+                d -> new BatchCollector((int) (MAX_PARTITION_SKEW * batchDesiredBytes / this.outputPartitioner.getNumberOfPartitions()))
+                // d -> new BatchCollector(10 * 1024 * 1024)); // 10 MB per Partition
+        );
         batchCollector.addRecord(
                 destinationPartition,
                 recordKey,
@@ -189,25 +213,29 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
         String objectId = objectIdSupplier.get();
         String objectPath = destination + "/" + objectId;
 
-        System.out.println("Will now try schedule call for writing " + objectPath);
+        //System.out.println("Will now try schedule call for writing " + objectPath);
 
         // Block if too many in-flight calls
-        try {
-            if (!inFlights.tryAcquire()) {
-                System.out.println("We have to wait now...");
-                inFlights.acquire();
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        if (!inFlights.tryAcquire()) {
+            LOGGER.info("Throttle batch writing.");
+            this.throttleTimer.record(() -> {
+                try {
+                    inFlights.acquire();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
         this.taskSharedBatcher.getPendingEvents().put(objectPath, new Object());
         this.taskSharedBatcher.incPendingEventsC();
+
+        batchSizeSummary.record(batchSizeInBytes);
 
         // Perform actual send
         CompletableFuture.supplyAsync(() -> {
             long startTime = System.currentTimeMillis(); // Use monitoring framework
             // Blocking call!
-            System.out.println("Start making call to S3 from async thread. " + objectPath);
+            //System.out.println("Start making call to S3 from async thread. " + objectPath);
             s3BatchFacade.writeBatch(objectPath, batchInputStream, batchSizeInBytes);
             long timeMs = System.currentTimeMillis() - startTime;
             LOGGER.info("Wrote batch of {} bytes to object {} in {} ms.", batchSizeInBytes, objectPath, timeMs);
@@ -222,7 +250,7 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
                     this.taskSharedBatcher.getFinishedAsyncCalls().add(notificationSet);
                     inFlights.release();
                     // TODO now we would be save to reuse a previous batch
-                    System.out.println("Finished call to S3 from async thread. " + objectPath);
+                    //System.out.println("Finished call to S3 from async thread. " + objectPath);
                 });
     }
 
@@ -242,8 +270,8 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
     }
 
     private void drainAsyncResults() {
-        System.out.println("Block for all results to be available.");
         // Call only after all calls have been scheduled
+        LOGGER.info("Block for {} pending results to be available.", this.taskSharedBatcher.getPendingEventsC());
         //while (!this.taskSharedBatcher.getPendingEvents().isEmpty()) {
         while (this.taskSharedBatcher.getPendingEventsC() != 0) {
             // Process one result in each iteration
@@ -255,12 +283,11 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
                 throw new RuntimeException(e);
             }
             if (asyncResult.isFailed()) {
-                System.out.println("Received a failed result in drainAsyncResults. Rethrow exception!");
                 // TODO Make custom exception
                 throw new RuntimeException(asyncResult.getException());
             }
             NotificationSet notificationSet = asyncResult.getResult();
-            taskSharedBatcher.getPendingEvents().remove(notificationSet.getObjectPath()); // No safe in multithreaded execution, but not intended
+            taskSharedBatcher.getPendingEvents().remove(notificationSet.getObjectPath()); // Not safe in multithreaded execution, but not intended
             taskSharedBatcher.decPendingEventsC();
             forwardNotifications(notificationSet);
         }
@@ -309,9 +336,11 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
 
         private final TaskSharedBatcher taskSharedBatcher;
 
+        private final MeterRegistry meterRegistry;
+
         private final Consumer<ProcessorContext<NotificationDestination, NotificationDetails>> onInitCallback;
 
-        public Supplier(S3BatchFacade s3BatchFacade, OutputPartitioner outputPartitioner, Serde<K> keySerde, Serde<V> valueSerde, long batchDesiredBytes, Duration batchMaxDuration, TaskSharedBatcher taskSharedBatcher, Consumer<ProcessorContext<NotificationDestination, NotificationDetails>> onInitCallback) {
+        public Supplier(S3BatchFacade s3BatchFacade, OutputPartitioner outputPartitioner, Serde<K> keySerde, Serde<V> valueSerde, long batchDesiredBytes, Duration batchMaxDuration, TaskSharedBatcher taskSharedBatcher, Consumer<ProcessorContext<NotificationDestination, NotificationDetails>> onInitCallback, MeterRegistry meterRegistry) {
             super("DUMMY-BATCHER");
             this.s3BatchFacade = s3BatchFacade;
             this.outputPartitioner = outputPartitioner;
@@ -321,6 +350,7 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
             this.batchMaxDuration = batchMaxDuration;
             this.taskSharedBatcher = taskSharedBatcher;
             this.onInitCallback = onInitCallback;
+            this.meterRegistry = meterRegistry;
         }
 
         @Override
@@ -334,6 +364,7 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
                     this.batchMaxDuration,
                     this.taskSharedBatcher,
                     this.onInitCallback,
+                    this.meterRegistry,
                     processorFlushStoreRegistry);
         }
 

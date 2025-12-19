@@ -28,8 +28,11 @@
 package com.dynatrace.research.s3shuffler.kstreams;
 
 import com.dynatrace.research.s3shuffler.OutputPartitioner;
+import com.dynatrace.research.s3shuffler.Partitioner;
 import com.dynatrace.research.s3shuffler.Refresher;
 import com.dynatrace.research.s3shuffler.S3BatchFacade;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.TopicDescription;
@@ -73,6 +76,8 @@ public class S3Shuffler<K,V> {
 
     private AdminClient adminClient; // TODO Try to avoid storing this
 
+    private final MeterRegistry meterRegistry;
+
     private final TaskSharedBatcher taskSharedBatcher = new TaskSharedBatcher(); // TODO Has to be per thread
 
     public S3Shuffler(
@@ -83,7 +88,7 @@ public class S3Shuffler<K,V> {
             Duration batchMaxDuration,
             String repartitionName,
             Duration kafkaRackAssignmentRefreshInterval) {
-        this(s3BatchFacade, keySerde, valueSerde, batchDesiredBytes, batchMaxDuration, repartitionName, null, kafkaRackAssignmentRefreshInterval);
+        this(s3BatchFacade, keySerde, valueSerde, batchDesiredBytes, batchMaxDuration, repartitionName, null, kafkaRackAssignmentRefreshInterval, new SimpleMeterRegistry());
     }
 
     public S3Shuffler(
@@ -93,8 +98,36 @@ public class S3Shuffler<K,V> {
             long batchDesiredBytes,
             Duration batchMaxDuration,
             String repartitionName,
+            Partitioner partitioner,
+            Duration kafkaRackAssignmentRefreshInterval,
+            MeterRegistry meterRegistry) {
+        this(s3BatchFacade, keySerde, valueSerde, batchDesiredBytes, batchMaxDuration, repartitionName, Partitioner.KAFKA_BUILTIN, new HashMap<>(), kafkaRackAssignmentRefreshInterval, meterRegistry);
+    }
+
+    public S3Shuffler(
+            S3BatchFacade s3BatchFacade,
+            Serde<K> keySerde,
+            Serde<V> valueSerde,
+            long batchDesiredBytes,
+            Duration batchMaxDuration,
+            String repartitionName,
+            Partitioner partitioner,
             Map<Integer, String> staticOutputPartitionsToRacks,
             Duration kafkaRackAssignmentRefreshInterval) {
+        this(s3BatchFacade, keySerde, valueSerde, batchDesiredBytes, batchMaxDuration, repartitionName, partitioner, staticOutputPartitionsToRacks, kafkaRackAssignmentRefreshInterval, new SimpleMeterRegistry());
+    }
+
+    public S3Shuffler(
+            S3BatchFacade s3BatchFacade,
+            Serde<K> keySerde,
+            Serde<V> valueSerde,
+            long batchDesiredBytes,
+            Duration batchMaxDuration,
+            String repartitionName,
+            Partitioner partitioner,
+            Map<Integer, String> staticOutputPartitionsToRacks,
+            Duration kafkaRackAssignmentRefreshInterval,
+            MeterRegistry meterRegistry) {
             //Refresher rackAssignmentRefresher,
             //String applicationId, // TODO Try to avoid passing this
             //String bootstrapServers) { // TODO Try to avoid passing this
@@ -108,17 +141,13 @@ public class S3Shuffler<K,V> {
         //Properties adminProperties = new Properties();
         //adminProperties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         //this.adminClient = AdminClient.create(adminProperties);
-        // TODO Does it make sense to provide a static config?
-        if (staticOutputPartitionsToRacks != null) {
-            this.outputPartitioner = new OutputPartitioner(staticOutputPartitionsToRacks);
-        } else {
-            this.outputPartitioner = new OutputPartitioner(new HashMap<>());
-        }
+        this.outputPartitioner = new OutputPartitioner(partitioner, staticOutputPartitionsToRacks);
         if (!kafkaRackAssignmentRefreshInterval.equals(Duration.ZERO)) {
             this.rackAssignmentRefresher = Refresher.create(kafkaRackAssignmentRefreshInterval, this::refreshPartitionRackAssignment);
         } else {
             this.rackAssignmentRefresher = Refresher.NOOP;
         }
+        this.meterRegistry = meterRegistry;
     }
 
     public ProcessorSupplier<K, V, NotificationDestination, NotificationDetails> batcherSupplier() {
@@ -130,11 +159,12 @@ public class S3Shuffler<K,V> {
                 batchDesiredBytes,
                 batchMaxDuration,
                 taskSharedBatcher,
-                this::handleProcessorInit);
+                this::handleProcessorInit,
+                meterRegistry);
     }
 
     public ProcessorSupplier<NotificationDestination, NotificationDetails, K, V> debatcherSupplier() {
-        return new S3DebatcherProcessor.Supplier<>(s3BatchFacade, keySerde, valueSerde);
+        return new S3DebatcherProcessor.Supplier<>(s3BatchFacade, keySerde, valueSerde, meterRegistry);
     }
 
     public Repartitioned<NotificationDestination, NotificationDetails> repartitioned() {
@@ -159,11 +189,14 @@ public class S3Shuffler<K,V> {
     }
 
     private void handleProcessorInit(ProcessorContext<?, ?> context) {
-        System.out.println("Refresh partition assignment...");
+        System.out.println("Refresh partition assignment.");
         this.initRefresherOrFail(
                 (List<String>) context.appConfigs().get(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG),
                 context.applicationId());
         this.rackAssignmentRefresher.runOnce();
+
+        // TODO This seems to be missing:
+        //this.rackAssignmentRefresher.start();
     }
 
     private void initRefresherOrFail(List<String> kafkaBootstrapServers, String applicationId) {
