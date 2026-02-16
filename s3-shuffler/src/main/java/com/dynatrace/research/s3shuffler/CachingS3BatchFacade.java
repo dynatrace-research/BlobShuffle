@@ -108,7 +108,7 @@ public class CachingS3BatchFacade implements S3BatchFacade {
                     this.pendingReads.remove(objectPath);
                 }
             } else {
-                System.out.println("Wait for previous query to S3: " + objectPath + "");
+                //System.out.println("Wait for previous query to S3: " + objectPath + "");
                 // Other threads wait until the first one finishes reading
                 try {
                     latch.await();
@@ -118,6 +118,11 @@ public class CachingS3BatchFacade implements S3BatchFacade {
                 }
             }
         }
+    }
+
+    @Override
+    public SizeAwareInputStream readPartialBatch(String objectPath, int offsetStart, int offsetEnd) {
+        throw new UnsupportedOperationException("Partial reads not supported.");
     }
 
     private byte[] loadBatchInputStream(InputStream batchInputStream, int batchSizeInBytes) {
@@ -132,5 +137,10 @@ public class CachingS3BatchFacade implements S3BatchFacade {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void close() {
+        this.wrapped.close();
     }
 }

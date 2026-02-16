@@ -15,6 +15,8 @@ import org.apache.kafka.streams.kstream.Repartitioned;
 import org.apache.kafka.streams.processor.api.ProcessorContext;
 import org.apache.kafka.streams.processor.api.ProcessorSupplier;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +24,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.*;
 
-public class S3Shuffler<K,V> {
+public class S3Shuffler<K,V> implements Closeable {
 
     private final S3BatchFacade s3BatchFacade;
 
@@ -151,16 +153,14 @@ public class S3Shuffler<K,V> {
             //Refresher rackAssignmentRefresher,
             //String applicationId, // TODO Try to avoid passing this
             //String bootstrapServers) { // TODO Try to avoid passing this
-        this.s3BatchFacade = distributedCacheConfig
-                .maybeWrapS3BatchFacade(
-                        localCacheConfig.maybeWrapS3BatchFacade(
-                                s3Config.toS3BatchFacade(meterRegistry),
-                                batchDesiredBytes,
-                                meterRegistry
-                        ),
+        this.s3BatchFacade = localCacheConfig.maybeWrapS3BatchFacade(
+                distributedCacheConfig.maybeWrapS3BatchFacade(
+                        s3Config.toS3BatchFacade(meterRegistry),
                         zone,
                         batchDesiredBytes,
-                        meterRegistry);
+                        meterRegistry),
+                batchDesiredBytes,
+                meterRegistry);
         this.keySerde = keySerde;
         this.valueSerde = valueSerde;
         this.batchDesiredBytes = batchDesiredBytes;
@@ -287,4 +287,10 @@ public class S3Shuffler<K,V> {
     }
 
 
+    @Override
+    public void close() {
+        this.rackAssignmentRefresher.close();
+        this.adminClient.close();
+        this.s3BatchFacade.close();
+    }
 }

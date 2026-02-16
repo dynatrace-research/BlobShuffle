@@ -27,6 +27,7 @@ public class DistributedCachingS3BatchFacade implements S3BatchFacade {
             int cacheSize,
             boolean cacheOnWrite,
             MeterRegistry meterRegistry) {
+        /*
         this.wrapped = new ProxyingS3BatchFacade(
                 new CachingS3BatchFacade(
                         wrapped,
@@ -38,7 +39,7 @@ public class DistributedCachingS3BatchFacade implements S3BatchFacade {
                 advertisedHost,
                 port,
                 meterRegistry);
-        /*
+        */
         this.wrapped = new ProxyingS3BatchFacade(
                 new FullBatchS3BatchFacade(
                         new CachingS3BatchFacade(
@@ -52,7 +53,7 @@ public class DistributedCachingS3BatchFacade implements S3BatchFacade {
                 advertisedHost,
                 port,
                 meterRegistry);
-        */
+
 
         /*
         this.metricRegistry = meterRegistry;
@@ -77,12 +78,23 @@ public class DistributedCachingS3BatchFacade implements S3BatchFacade {
 
     }
 
+    @Override
     public void writeBatch(String objectPath, InputStream batchInputStream, int batchSizeInBytes) {
         this.wrapped.writeBatch(objectPath, batchInputStream, batchSizeInBytes);
     }
 
+    @Override
     public SizeAwareInputStream readBatch(String objectPath) {
         return this.proxyReadTimer.record(() -> this.wrapped.readBatch(objectPath));
     }
 
+    @Override
+    public SizeAwareInputStream readPartialBatch(String objectPath, int offsetStart, int offsetEnd) {
+        return this.proxyReadTimer.record(() -> this.wrapped.readPartialBatch(objectPath, offsetStart, offsetEnd));
+    }
+
+    @Override
+    public void close() {
+        this.wrapped.close();
+    }
 }

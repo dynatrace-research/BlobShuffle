@@ -1,5 +1,6 @@
 package com.dynatrace.research.s3shuffler;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -23,5 +24,9 @@ public class StaticMemberDiscoverer implements MemberDiscoverer {
     @Override
     public String getThisMember() {
         return this.thisMember;
+    }
+
+    @Override
+    public void close() {
     }
 }
