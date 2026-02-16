@@ -97,7 +97,7 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
     @Override
     public void process(Record<NotificationDestination, NotificationDetails> notification) {
         // TODO Temp
-        LOGGER.info("########## Repartitioned to {}; ts: {}; details: {}", notification.key(), notification.timestamp(), notification.value());
+        //LOGGER.info("########## Repartitioned to {}; ts: {}; details: {}", notification.key(), notification.timestamp(), notification.value());
 
         // Before processing the new record, we first collect the results of all async calls that have finished in the meantime
         this.collectAsyncResults();
@@ -133,7 +133,7 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
     // TODO move up this file
 
     // Per task
-    private final int maxInFlightWritesPerTask = 6; // * 8; // TODO Make configurable
+    private final int maxInFlightWritesPerTask = 6; // * 8; // TODO Make configurable (default: 6)
     // TODO Temporary value
     // TODO static is just a very ugly hack for now
 
@@ -164,8 +164,11 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
         CompletableFuture.supplyAsync(() -> {
                     long startTime = System.currentTimeMillis(); // Use monitoring framework
                     // Blocking call!
-                    InputStream batchInputStream = this.s3BatchFacade.readBatch(objectPath);
-                    BatchReader batchReader = new BatchReader(batchInputStream, offsetStart, offsetEnd - offsetStart);
+                    // TODO make configurable
+                    //S3BatchFacade.SizeAwareInputStream batchInputStream = this.s3BatchFacade.readBatch(objectPath);
+                    //BatchReader batchReader = new BatchReader(batchInputStream, offsetStart, offsetEnd - offsetStart);
+                    S3BatchFacade.SizeAwareInputStream batchInputStream = this.s3BatchFacade.readPartialBatch(objectPath, offsetStart, offsetEnd);
+                    BatchReader batchReader = new BatchReader(batchInputStream, 0, batchInputStream.size());
                     long timeMs = System.currentTimeMillis() - startTime;
                     LOGGER.info("Read batch from object {} in {} ms.", objectPath, timeMs);
                     return AsyncResult.of(batchReader);

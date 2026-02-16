@@ -52,7 +52,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 
-public class ProxyingS3BatchFacade implements S3BatchFacade, Closeable {
+public class ProxyingS3BatchFacade implements S3BatchFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyingS3BatchFacade.class);
 
@@ -85,11 +85,20 @@ public class ProxyingS3BatchFacade implements S3BatchFacade, Closeable {
                 })
                 .get("/batches/<objectPath>", ctx -> {
                     String objectPath = ctx.pathParam("objectPath");
-                    //ctx.queryParam("offsetStart");
-                    //Integer.valueOf(ctx.queryParam("offsetEnd"));
-                    try (SizeAwareInputStream readBatchStream = this.readBatch(objectPath)) {
-                        ctx.header(Header.CONTENT_LENGTH, String.valueOf(readBatchStream.size()));
-                        ctx.result(readBatchStream);
+                    String offsetStart = ctx.queryParam("offsetStart"); // Can be null
+                    String offsetEnd = ctx.queryParam("offsetEnd");  // Can be null
+                    if (offsetStart != null && offsetEnd != null) {
+                        int offsetStartInt = Integer.parseInt(offsetStart);
+                        int offsetEndInt = Integer.parseInt(offsetEnd);
+                        try (SizeAwareInputStream readPartialBatchStream = this.readPartialBatch(objectPath, offsetStartInt, offsetEndInt)) {
+                            ctx.header(Header.CONTENT_LENGTH, String.valueOf(readPartialBatchStream.size()));
+                            ctx.result(readPartialBatchStream);
+                        }
+                    } else {
+                        try (SizeAwareInputStream readBatchStream = this.readBatch(objectPath)) {
+                            ctx.header(Header.CONTENT_LENGTH, String.valueOf(readBatchStream.size()));
+                            ctx.result(readBatchStream);
+                        }
                     }
                 })
                 .put("/batches/<objectPath>", ctx -> {
@@ -133,7 +142,7 @@ public class ProxyingS3BatchFacade implements S3BatchFacade, Closeable {
         try {
             HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != HttpStatus.CREATED.getCode()) {
-                throw new RuntimeException("Request to member " + objectOwner + " resulted in unexpected status code " + response.statusCode());
+                throw new RuntimeException("Write request to member " + objectOwner + " resulted in unexpected status code " + response.statusCode());
             }
         } catch (ConnectException e) {
             throw new RuntimeException("Failed to connect to member "+ objectOwner, e);
@@ -154,29 +163,48 @@ public class ProxyingS3BatchFacade implements S3BatchFacade, Closeable {
         }
     }
 
+    @Override
+    public SizeAwareInputStream readPartialBatch(String objectPath, int offsetStart, int offsetEnd) {
+        String objectOwner = this.getOwnerForObjectPath(objectPath);
+        if (objectOwner.equals(this.memberDiscoverer.getThisMember())) {
+            return this.wrapped.readPartialBatch(objectPath, offsetStart, offsetEnd);
+        } else {
+            LOGGER.info("Forward partial read request for object '{}' to '{}'", objectPath, objectOwner);
+            return forwardReadBatch(objectPath, objectOwner, offsetStart, offsetEnd);
+        }
+    }
+
     private SizeAwareInputStream forwardReadBatch(String objectPath, String objectOwner) {
+        return forwardReadBatch(
+                URI.create("http://" + objectOwner + "/batches/" + objectPath));
+    }
+
+    private SizeAwareInputStream forwardReadBatch(String objectPath, String objectOwner,  int offsetStart, int offsetEnd) {
+        return forwardReadBatch(
+                URI.create("http://" + objectOwner + "/batches/" + objectPath + "?offsetStart=" + offsetStart + "&offsetEnd=" + offsetEnd));
+    }
+
+    private SizeAwareInputStream forwardReadBatch(URI uri) {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(("http://" + objectOwner + "/batches/" + objectPath)))
-                //.uri(URI.create(("http://" + objectOwner + "/batches/" + objectPath + "?offsetStart=" + offsetStart + "&offsetEnd=" + offsetEnd)))
+                .uri(uri)
                 .GET()
                 .build();
         try {
             HttpResponse<InputStream> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
             if (response.statusCode() != HttpStatus.OK.getCode()) {
-                throw new RuntimeException("Request to member " + objectOwner + " resulted in unexpected status code " + response.statusCode());
+                throw new RuntimeException("Read request to member " + uri.getHost() + ":" + uri.getPort() + " resulted in unexpected status code " + response.statusCode());
             }
             int contentLength = Integer.parseInt(response.headers().firstValue("Content-Length").orElseThrow());
             return new SizeAwareInputStream(response.body(), contentLength);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         this.webserver.stop();
+        this.memberDiscoverer.close();
     }
 
     private static class JGroupsMemberDiscoverer implements MemberDiscoverer {
@@ -209,6 +237,10 @@ public class ProxyingS3BatchFacade implements S3BatchFacade, Closeable {
             return this.channel.address().toString();
         }
 
+        @Override
+        public void close() {
+            this.channel.close();
+        }
     }
 
 }

@@ -133,9 +133,15 @@ public class BasicS3BatchFacade implements S3BatchFacade {
         return new SizeAwareInputStream(batchInputStream, (int) batchSize);
     }
 
-    @Deprecated
-    public S3BatchFacade withLocalCache(int cacheSize, boolean cacheOnWrite) {
-        return new CachingS3BatchFacade(this, cacheSize, cacheOnWrite, this.meterRegistry, "local");
+    @Override
+    public SizeAwareInputStream readPartialBatch(String objectPath, int offsetStart, int offsetEnd) {
+        // Might change later to use Range GETs from S3
+        throw new UnsupportedOperationException("Partial reads from S3 not supported");
+    }
+
+    @Override
+    public void close() {
+
     }
 
 }

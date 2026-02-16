@@ -27,12 +27,14 @@
  */
 package com.dynatrace.research.s3shuffler;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public interface Refresher {
+public interface Refresher extends Closeable {
 
     Refresher NOOP = new NoopRefresher();
 
@@ -43,6 +45,8 @@ public interface Refresher {
     void start();
 
     void runOnce();
+
+    void close();
 
     class OwnSingleThreadRefresher implements Refresher {
 
@@ -67,6 +71,11 @@ public interface Refresher {
             this.callback.run();
         }
 
+
+        @Override
+        public void close() {
+            this.executor.close();
+        }
     }
 
     class NoopRefresher implements Refresher {
@@ -84,6 +93,10 @@ public interface Refresher {
             // Do nothing
         }
 
+        @Override
+        public void close() {
+            // Do nothing
+        }
     }
 
 }
