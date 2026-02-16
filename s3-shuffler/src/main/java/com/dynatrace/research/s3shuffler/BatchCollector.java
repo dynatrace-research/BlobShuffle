@@ -32,6 +32,7 @@ import org.apache.kafka.common.header.Headers;
 
 import java.io.InputStream;
 import java.nio.Buffer;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -53,6 +54,21 @@ public class BatchCollector {
     public void addRecord(int outputPartition, byte[] recordKey, byte[] recordValue, long recordTimestamp, Headers recordHeaders) {
         ByteBuffer buffer = byteBuffers.computeIfAbsent(outputPartition, d -> ByteBuffer.allocate(batchMaxBytes));
 
+        buffer.mark(); // Mark the current position to reset in case of overflow
+
+        try {
+            this.addRecordToBuffer(buffer, outputPartition, recordKey, recordValue, recordTimestamp, recordHeaders);
+        } catch (BufferOverflowException e) {
+            buffer.reset(); // Reset buffer to the marked position to discard the partially written record
+            throw new IllegalStateException("Cannot add record to batch for partition " + outputPartition + " as it would exceed the maximum batch size of " + batchMaxBytes + " bytes", e);
+        }
+
+        // Update metadata
+        this.highestTimestamp = Math.max(this.highestTimestamp, recordTimestamp);
+        this.numRecords++;
+    }
+
+    private void addRecordToBuffer(ByteBuffer buffer, int outputPartition, byte[] recordKey, byte[] recordValue, long recordTimestamp, Headers recordHeaders) throws BufferOverflowException {
         // Add partition
         buffer.putInt(outputPartition); // partition
 
@@ -88,10 +104,6 @@ public class BatchCollector {
             buffer.putInt(headerValue.length); // header value size
             buffer.put(headerValue); // header value content
         }
-
-        // Update metadata
-        this.highestTimestamp = Math.max(this.highestTimestamp, recordTimestamp);
-        this.numRecords++;
     }
 
     public int getSizeInBytes() {
