@@ -30,7 +30,8 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
 
     private static final String DUMMY_TOPIC = "";
 
-    public static final int MAX_PARTITION_SKEW = 4; // Max. tolerable difference on load on a partition vs. the avg. across partitions
+    // TODO Can be decreased if we incorporate the number of partitions per zone
+    public static final int MAX_PARTITION_SKEW = 8; // Max. tolerable difference on load on a partition vs. the avg. across partitions
 
     private final long batchDesiredBytes;
 
@@ -120,7 +121,7 @@ public class S3BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K,
         BatchCollector batchCollector = this.taskSharedBatcher.getBatchCollectors().computeIfAbsent(
                 destinationZone,
                 d -> new BatchCollector((int) (MAX_PARTITION_SKEW * batchDesiredBytes / this.outputPartitioner.getNumberOfPartitions()))
-                // d -> new BatchCollector(10 * 1024 * 1024)); // 10 MB per Partition
+                // d -> new BatchCollector(10 * 1024 * 1024) // 10 MB per Partition
         );
         batchCollector.addRecord(
                 destinationPartition,

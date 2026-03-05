@@ -30,6 +30,7 @@ dependencies {
     implementation 'software.amazon.awssdk:s3:2.29.0'
     implementation 'software.amazon.awssdk:sts:2.29.0'
     implementation 'software.amazon.awssdk:apache5-client:2.32.0-PREVIEW'
+    //implementation 'software.amazon.awssdk:apache5-client:2.41.0' // Upgrade whenever possible
     implementation 'org.infinispan:infinispan-core:15.2.5.Final'
     implementation ('io.javalin:javalin:6.7.0') {
         exclude group: 'org.slf4j', module: 'slf4j-api'
