@@ -49,6 +49,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 // implements S3BatchFacade
+@Deprecated
 public class InfinispanDistributedCachingS3BatchFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InfinispanDistributedCachingS3BatchFacade.class);
