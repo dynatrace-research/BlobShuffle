@@ -21,7 +21,8 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-public class InfinispanDistributedCachingS3BatchFacade implements S3BatchFacade {
+// implements S3BatchFacade
+public class InfinispanDistributedCachingS3BatchFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InfinispanDistributedCachingS3BatchFacade.class);
 
@@ -104,13 +105,13 @@ public class InfinispanDistributedCachingS3BatchFacade implements S3BatchFacade 
         this.wrapped.writeBatch(objectPath, maybeWrappedInputStream, batchSizeInBytes);
     }
 
-    public SizeAwareInputStream readBatch(String objectPath) {
+    public S3BatchFacade.SizeAwareInputStream readBatch(String objectPath) {
         return this.cacheReadTimer.record(
                 () -> doReadBatch(objectPath)
         );
     }
 
-    private SizeAwareInputStream doReadBatch(String objectPath) {
+    private S3BatchFacade.SizeAwareInputStream doReadBatch(String objectPath) {
         final byte[] lock = new byte[0];
         while (true) {
             byte[] cachedObject = this.cache.putIfAbsent(objectPath, lock, 10000, TimeUnit.MILLISECONDS);
@@ -121,7 +122,7 @@ public class InfinispanDistributedCachingS3BatchFacade implements S3BatchFacade 
                 BasicS3BatchFacade.SizeAwareInputStream batchInputStream = this.wrapped.readBatch(objectPath);
                 byte[] readBatch = loadBatchInputStream(batchInputStream, batchInputStream.size());
                 this.cache.put(objectPath, readBatch);
-                return new SizeAwareInputStream(new ByteArrayInputStream(readBatch), readBatch.length);
+                return new S3BatchFacade.SizeAwareInputStream(new ByteArrayInputStream(readBatch), readBatch.length);
             } else if (cachedObject.length == 0) {
                 // Someone else already locked this entry
                 System.out.println("Wait for previous query to S3: " + objectPath + "");
@@ -134,9 +135,13 @@ public class InfinispanDistributedCachingS3BatchFacade implements S3BatchFacade 
                 // Real cache entry was present before, this is our item
                 this.cacheHitsCounter.increment();
                 System.out.println("Read from distributed cache: " + objectPath + " (" + cachedObject.length + " bytes)");
-                return new SizeAwareInputStream(new ByteArrayInputStream(cachedObject), cachedObject.length);
+                return new S3BatchFacade.SizeAwareInputStream(new ByteArrayInputStream(cachedObject), cachedObject.length);
             }
         }
+    }
+
+    public S3BatchFacade.SizeAwareInputStream readPartialBatch(String objectPath, int offsetStart, int offsetEnd) {
+        throw new UnsupportedOperationException("Partial batch reads are not supported");
     }
 
     private byte[] loadBatchInputStream(InputStream batchInputStream, int batchSizeInBytes) {
