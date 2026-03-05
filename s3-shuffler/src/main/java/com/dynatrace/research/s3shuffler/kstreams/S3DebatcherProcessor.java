@@ -133,7 +133,7 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
     // TODO move up this file
 
     // Per task
-    private final int maxInFlightWritesPerTask = 6; // * 8; // TODO Make configurable (default: 6)
+    private final int maxInFlightWritesPerTask = 32; //16; // * 8; // TODO Make configurable (default: 6)
     // TODO Temporary value
     // TODO static is just a very ugly hack for now
 

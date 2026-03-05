@@ -35,13 +35,10 @@ import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import io.smallrye.config.SmallRyeConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.processor.assignment.assignors.StickyTaskAssignor;
-import org.apache.kafka.streams.processor.internals.assignment.HighAvailabilityTaskAssignor;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +86,8 @@ public class KafkaStreamsS3ShufflerExample {
           Duration kafkaRackAssignmentRefreshInterval,
           long batchDesiredBytes,
           Duration batchMaxDuration,
-          Partitioner partitioner
+          Partitioner partitioner,
+          Map<String, String> kafkaStreamsProps
   ) {
     //this.zone = zone;
     if (zone.isPresent()) {
@@ -137,6 +135,14 @@ public class KafkaStreamsS3ShufflerExample {
       props.put(StreamsConfig.RACK_AWARE_ASSIGNMENT_TAGS_CONFIG, "zone");
       props.put(StreamsConfig.RACK_AWARE_ASSIGNMENT_STRATEGY_CONFIG, StreamsConfig.RACK_AWARE_ASSIGNMENT_STRATEGY_MIN_TRAFFIC);
     }
+    props.put("internal.leave.group.on.close", true); // Only supported up to Kafka 4.1 (see https://issues.apache.org/jira/browse/KAFKA-18185)
+    //props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 120000);
+    //props.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, 120000);
+    //props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 300000);
+    //props.put(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG, 300000);
+    //props.put(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG, (50 * 1024 * 1024) / 9);
+    //props.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, 8 * 1024 * 1024);
+    props.putAll(kafkaStreamsProps);
     final org.apache.kafka.streams.Topology steamsTopology = buildTopology(topology, s3Shuffler, meterRegistry);
     this.kafkaStreamsApp = new KafkaStreams(steamsTopology, props);
   }
@@ -158,6 +164,15 @@ public class KafkaStreamsS3ShufflerExample {
                   .register(meterRegistry);
 
                 builder.stream(kafkaTopicInput, Consumed.with(Serdes.ByteArray(), Serdes.ByteArray()))
+                /*.flatMap((key, value) -> {
+                  long seed = ByteBuffer.wrap(value, 0, 8).getLong();
+                  SplittableRandom random = new SplittableRandom(seed);
+                  return Stream.generate(() -> {
+                    byte[] newValue = new byte[value.length];
+                    random.nextBytes(newValue);
+                    return new KeyValue<>(key, newValue);
+                  }).limit(10).toList();
+                })*/
                 .selectKey((k,value) -> Arrays.copyOfRange(value, 0, 4))
                 .mapValues(value -> {
                   long currentTime = System.currentTimeMillis();
@@ -217,7 +232,8 @@ public class KafkaStreamsS3ShufflerExample {
   }
 
   public void stop() {
-    this.kafkaStreamsApp.close();
+    // Leave option seem to only have an effect for Kafka >=4.2 (see https://issues.apache.org/jira/browse/KAFKA-18185)
+    this.kafkaStreamsApp.close(new KafkaStreams.CloseOptions().leaveGroup(true));
   }
 
   private MeterRegistry getRegistry() {
@@ -300,6 +316,7 @@ public class KafkaStreamsS3ShufflerExample {
     String cacheDistributedAdvertisedHost = config.getValue("cache.distributed.advertised.host", String.class);
     int cacheDistributedPort = config.getValue("cache.distributed.port", Integer.class);
     DistributedCacheConfig distributedCacheConfig = new DistributedCacheConfig(cacheDistributedEnabled, cacheDistributedSizeBytes, cacheDistributedOnWrite, cacheDistributedAdvertisedHost, cacheDistributedPort);
+    Map<String, String> kafkaStreamsProps = config.getOptionalValues("kafkastreams", String.class, String.class).orElse(Map.of());
 
     KafkaStreamsS3ShufflerExample kafkaStreamsS3Shuffler = new KafkaStreamsS3ShufflerExample(
             topology,
@@ -315,8 +332,22 @@ public class KafkaStreamsS3ShufflerExample {
             Duration.ofSeconds(300),
             batchDesiredBytes,
             batchMaxDuration,
-            partitioner
+            partitioner,
+            kafkaStreamsProps
     );
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      LOGGER.info("Shutdown hook triggered, closing Kafka Streams instance...");
+      kafkaStreamsS3Shuffler.stop();
+      LOGGER.info("Kafka Streams instance closed.");
+      LOGGER.info("Now sleep...");
+        try {
+            Thread.sleep(30_000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+      LOGGER.info("Sleep finished.");
+    }));
+
     kafkaStreamsS3Shuffler.start();
   }
 

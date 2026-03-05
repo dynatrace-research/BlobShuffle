@@ -29,9 +29,7 @@ package com.dynatrace.research.s3shuffler.kstreams;
 
 import com.dynatrace.hash4j.hashing.Hasher64;
 import com.dynatrace.hash4j.hashing.Hashing;
-import com.dynatrace.research.s3shuffler.CacheConfig;
-import com.dynatrace.research.s3shuffler.KafkaContainerCluster;
-import com.dynatrace.research.s3shuffler.Partitioner;
+import com.dynatrace.research.s3shuffler.*;
 import com.dynatrace.research.shufflebench.KafkaLoadGenerator;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
@@ -109,7 +107,8 @@ class KafkaStreamsS3ShufflerE2ETest {
                     Optional.of(zone),
                     s3Client,
                     bucketName,
-                    CacheConfig.noCache(),
+                    LocalCacheConfig.noCache(),
+                    DistributedCacheConfig.noCache(),
                     bootstrapServers,
                     inputTopic,
                     notificationsTopic,
@@ -117,7 +116,8 @@ class KafkaStreamsS3ShufflerE2ETest {
                     Duration.ofSeconds(30),
                     1024 * 1024,
                     Duration.ofSeconds(5),
-                    Partitioner.KAFKA_BUILTIN
+                    Partitioner.KAFKA_BUILTIN,
+                    Map.of()
             );
             application.start();
 
