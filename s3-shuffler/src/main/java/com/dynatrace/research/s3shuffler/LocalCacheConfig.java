@@ -36,12 +36,11 @@ public record LocalCacheConfig(
 
     public S3BatchFacade maybeWrapS3BatchFacade(S3BatchFacade s3BatchFacade, long batchDesiredBytes, MeterRegistry meterRegistry) {
         if (this.enabled()) {
-            return new CachingS3BatchFacade(
+            return new LocalCachingS3BatchFacade(
                     s3BatchFacade,
                     (int) (this.sizeInBytes() / batchDesiredBytes),
                     this.cacheOnWrite,
-                    meterRegistry,
-                    "local");
+                    meterRegistry);
         } else {
             return s3BatchFacade;
         }

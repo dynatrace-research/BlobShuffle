@@ -164,9 +164,6 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
         CompletableFuture.supplyAsync(() -> {
                     long startTime = System.currentTimeMillis(); // Use monitoring framework
                     // Blocking call!
-                    // TODO make configurable
-                    //S3BatchFacade.SizeAwareInputStream batchInputStream = this.s3BatchFacade.readBatch(objectPath);
-                    //BatchReader batchReader = new BatchReader(batchInputStream, offsetStart, offsetEnd - offsetStart);
                     S3BatchFacade.SizeAwareInputStream batchInputStream = this.s3BatchFacade.readPartialBatch(objectPath, offsetStart, offsetEnd);
                     BatchReader batchReader = new BatchReader(batchInputStream, 0, batchInputStream.size());
                     long timeMs = System.currentTimeMillis() - startTime;
@@ -193,10 +190,11 @@ public class S3DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<
                 // TODO Make custom exception
                 throw new RuntimeException(asyncResult.getException());
             }
-            BatchReader batchReader = asyncResult.getResult();
-            //pendingEvents.remove(batchReader.getObjectPath()); // No safe in multithreaded execution, but not intended
-            pendingEvents--;
-            forwardBatchRecords(batchReader);
+            try (BatchReader batchReader = asyncResult.getResult()) {
+                //pendingEvents.remove(batchReader.getObjectPath()); // No safe in multithreaded execution, but not intended
+                pendingEvents--;
+                forwardBatchRecords(batchReader);
+            }
         }
     }
 

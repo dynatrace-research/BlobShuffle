@@ -49,6 +49,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.http.apache5.Apache5HttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.Bucket;
@@ -79,6 +80,7 @@ class KafkaStreamsS3ShufflerE2ETest {
 
             S3Client s3Client = S3Client
                     .builder()
+                    .httpClient(Apache5HttpClient.builder().maxConnections(100).build())
                     .endpointOverride(localstack.getEndpoint())
                     .credentialsProvider(
                             StaticCredentialsProvider.create(
