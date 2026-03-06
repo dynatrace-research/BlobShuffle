@@ -8,7 +8,7 @@ public record S3Config(
         String bucketName) {
 
     public S3BatchFacade toS3BatchFacade(MeterRegistry meterRegistry) {
-        return new BasicS3BatchFacade(s3Client, bucketName, meterRegistry);
+        return new FullBatchS3BatchFacade(new BasicS3BatchFacade(s3Client, bucketName, meterRegistry));
     }
 
 }
