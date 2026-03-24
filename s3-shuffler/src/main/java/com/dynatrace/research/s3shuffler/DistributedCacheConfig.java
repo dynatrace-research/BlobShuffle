@@ -25,8 +25,12 @@ public record DistributedCacheConfig(
         }
     }
 
-    public static DistributedCacheConfig noCache() {
+    public static DistributedCacheConfig disabled() {
         return new DistributedCacheConfig(false, 0, false, "", -1);
+    }
+
+    public static DistributedCacheConfig enabled(long sizeInBytes, boolean cacheOnWrite, String advertisedHost, int port) {
+        return new DistributedCacheConfig(true, sizeInBytes, cacheOnWrite, advertisedHost, port);
     }
 
 }

@@ -19,8 +19,12 @@ public record LocalCacheConfig(
         }
     }
 
-    public static LocalCacheConfig noCache() {
+    public static LocalCacheConfig disabled() {
         return new LocalCacheConfig(false, 0, false);
+    }
+
+    public static LocalCacheConfig enabled(long sizeInBytes, boolean cacheOnWrite) {
+        return new LocalCacheConfig(true, sizeInBytes, cacheOnWrite);
     }
 
 }

@@ -71,8 +71,8 @@ import com.dynatrace.research.s3shuffler.kstreams.S3Shuffler;
 // Configure BlobShuffle
 S3Shuffler<MyKey, MyValue> shuffler = new S3Shuffler<>(
     new S3Config(s3Client, "my-bucket-name"),
-    LocalCacheConfig.noCache(),                  // or: new LocalCacheConfig(true, cacheSizeBytes, cacheOnWrite)
-    DistributedCacheConfig.noCache(),             // or: new DistributedCacheConfig(true, cacheSizeBytes, cacheOnWrite, advertisedHost, port)
+    LocalCacheConfig.disabled(),                 // or: LocalCacheConfig.enabled(cacheSizeBytes, cacheOnWrite)
+    DistributedCacheConfig.disabled(),            // or: DistributedCacheConfig.enabled(cacheSizeBytes, cacheOnWrite, advertisedHost, port)
     System.getenv("TOPOLOGY_ZONE"),              // availability zone of this instance
     Serdes.MyKey(),                              // key serde
     Serdes.MyValue(),                            // value serde
@@ -123,8 +123,8 @@ The project uses Gradle with the included wrapper:
 | Parameter | Type | Description |
 |---|---|---|
 | `s3Config` | `S3Config` | S3 client and bucket name (`new S3Config(s3Client, bucketName)`) |
-| `localCacheConfig` | `LocalCacheConfig` | Local (per-instance) LRU cache configuration. Use `LocalCacheConfig.noCache()` to disable. |
-| `distributedCacheConfig` | `DistributedCacheConfig` | Distributed (per-AZ) LRU cache configuration. Use `DistributedCacheConfig.noCache()` to disable. |
+| `localCacheConfig` | `LocalCacheConfig` | Local (per-instance) LRU cache configuration. Use `LocalCacheConfig.disabled()` to disable. |
+| `distributedCacheConfig` | `DistributedCacheConfig` | Distributed (per-AZ) LRU cache configuration. Use `DistributedCacheConfig.disabled()` to disable. |
 | `zone` | `String` | The availability zone identifier for this stream processing instance. Used for AZ-aware batching and cache routing. |
 | `keySerde` | `Serde<K>` | Kafka Streams serde for record keys. |
 | `valueSerde` | `Serde<V>` | Kafka Streams serde for record values. |
@@ -137,27 +137,10 @@ The project uses Gradle with the included wrapper:
 
 ### Cache Configuration
 
-**`LocalCacheConfig`**
-
-| Field | Type | Description |
-|---|---|---|
-| `enabled` | `boolean` | Whether the local cache is active. |
-| `sizeInBytes` | `long` | Maximum cache size in bytes. |
-| `cacheOnWrite` | `boolean` | Whether to cache batches when writing (write-through). |
-
-Convenience factory: `LocalCacheConfig.noCache()` returns a disabled configuration.
-
-**`DistributedCacheConfig`**
-
-| Field | Type | Description |
-|---|---|---|
-| `enabled` | `boolean` | Whether the distributed cache is active. |
-| `sizeInBytes` | `long` | Maximum cache size in bytes per cache node. |
-| `cacheOnWrite` | `boolean` | Whether to cache batches when writing (write-through). |
-| `advertisedHost` | `String` | Hostname advertised to other cache cluster members. |
-| `port` | `int` | Port for the cache HTTP server. |
-
-Convenience factory: `DistributedCacheConfig.noCache()` returns a disabled configuration.
+- **`LocalCacheConfig.disabled()`** — disables the local cache.
+- **`LocalCacheConfig.enabled(sizeInBytes, cacheOnWrite)`** — enables the per-instance LRU cache with the given capacity (bytes) and write-through behavior.
+- **`DistributedCacheConfig.disabled()`** — disables the distributed cache.
+- **`DistributedCacheConfig.enabled(sizeInBytes, cacheOnWrite, advertisedHost, port)`** — enables the per-AZ distributed LRU cache with the given capacity, write-through behavior, and the host/port this instance advertises to other cache cluster members.
 
 ### Example `application.properties`
 
