@@ -10,6 +10,10 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+/**
+ * Collects serialized records into per-partition byte buffers for batch assembly.
+ * Records for all partitions in the same target AZ are concatenated into a single batch.
+ */
 public class BatchCollector {
 
     private final int batchMaxBytes;
@@ -20,10 +24,25 @@ public class BatchCollector {
 
     private long highestTimestamp = -1;
 
+    /**
+     * Creates a new batch collector.
+     *
+     * @param batchMaxBytesPerPartition the maximum buffer size per partition in bytes
+     */
     public BatchCollector(int batchMaxBytesPerPartition) {
         this.batchMaxBytes = batchMaxBytesPerPartition;
     }
 
+    /**
+     * Adds a record to the buffer for the given output partition.
+     *
+     * @param outputPartition the target partition number
+     * @param recordKey the serialized record key, may be {@code null}
+     * @param recordValue the serialized record value, may be {@code null}
+     * @param recordTimestamp the record timestamp
+     * @param recordHeaders the record headers
+     * @throws IllegalStateException if the record would exceed the maximum buffer size for the partition
+     */
     public void addRecord(int outputPartition, byte[] recordKey, byte[] recordValue, long recordTimestamp, Headers recordHeaders) {
         ByteBuffer buffer = byteBuffers.computeIfAbsent(outputPartition, d -> ByteBuffer.allocate(batchMaxBytes));
 
@@ -79,11 +98,21 @@ public class BatchCollector {
         }
     }
 
+    /**
+     * Returns the total size in bytes across all partition buffers.
+     *
+     * @return the total size in bytes
+     */
     public int getSizeInBytes() {
         // Could also be implemented as a running sum, incremented on every added record
         return this.byteBuffers.values().stream().mapToInt(Buffer::position).sum();
     }
 
+    /**
+     * Returns offset ranges for all partitions that have buffered data.
+     *
+     * @return a sorted map from partition number to byte range within the serialized batch
+     */
     public SortedMap<Integer,OffsetRange> getOffsetRangeForAllPartition() {
         int offsetStart = 0;
         SortedMap<Integer,OffsetRange> offsetRanges = new TreeMap<>();
@@ -98,16 +127,32 @@ public class BatchCollector {
         return offsetRanges;
     }
 
+    /**
+     * Returns the byte range occupied by the given partition within the serialized batch.
+     *
+     * @param partition the partition number
+     * @return the offset range
+     */
     public OffsetRange getOffsetRangeForPartition(int partition) {
         int offsetStart = this.byteBuffers.headMap(partition).values().stream().mapToInt(Buffer::position).sum();
         int offsetEnd = offsetStart + this.byteBuffers.get(partition).position();
         return new OffsetRange(offsetStart, offsetEnd);
     }
 
+    /**
+     * Returns the highest timestamp among all collected records.
+     *
+     * @return the highest timestamp, or {@code -1} if no records have been added
+     */
     public long getHighestTimestamp() {
         return this.highestTimestamp;
     }
 
+    /**
+     * Returns the number of collected records.
+     *
+     * @return the record count
+     */
     public int getNumRecords() {
         return this.numRecords;
     }
@@ -139,6 +184,12 @@ public class BatchCollector {
         this.numRecords = 0;
     }
 
+    /**
+     * Represents a contiguous byte range within a batch.
+     *
+     * @param startInclusive the start offset (inclusive)
+     * @param endExclusive the end offset (exclusive)
+     */
     public record OffsetRange(int startInclusive, int endExclusive) {}
 
     private static class BatchCollectorInputStream extends InputStream {

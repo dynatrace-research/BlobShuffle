@@ -8,10 +8,22 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.time.Duration;
 
+/**
+ * {@link S3BatchFacade} composition that adds a per-instance local LRU cache in front of
+ * the underlying facade.
+ */
 public class LocalCachingS3BatchFacade implements S3BatchFacade {
 
     private final S3BatchFacade wrapped;
 
+    /**
+     * Creates a new local caching facade.
+     *
+     * @param wrapped the underlying facade
+     * @param cacheSize the maximum number of cached entries
+     * @param cacheOnWrite whether to cache batches on write (write-through)
+     * @param meterRegistry the meter registry for metrics
+     */
     public LocalCachingS3BatchFacade(
             S3BatchFacade wrapped,
             int cacheSize,
