@@ -10,7 +10,7 @@ application {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(24))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
     withJavadocJar()
     withSourcesJar()
@@ -59,7 +59,7 @@ test {
 
 jib {
     from {
-        image = "eclipse-temurin:24-jre"
+        image = "eclipse-temurin:25-jre"
         platforms {
             platform {
                 architecture = "amd64"
