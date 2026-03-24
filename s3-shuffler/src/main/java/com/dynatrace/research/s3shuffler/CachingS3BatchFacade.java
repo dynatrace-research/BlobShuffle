@@ -40,6 +40,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * {@link S3BatchFacade} decorator that adds in-memory LRU caching with coordination
+ * to avoid redundant downloads for concurrent reads of the same batch.
+ */
 public class CachingS3BatchFacade implements S3BatchFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CachingS3BatchFacade.class);
@@ -61,10 +65,26 @@ public class CachingS3BatchFacade implements S3BatchFacade {
     private final Counter cacheMissesCounter;
     private final Counter cacheDeletedMissesCounter; //TODO Debug
 
+    /**
+     * Creates a new caching facade with a default meter registry.
+     *
+     * @param wrapped the underlying facade
+     * @param cacheSize the maximum number of cached entries
+     * @param cacheOnWrite whether to cache batches on write (write-through)
+     */
     public CachingS3BatchFacade(S3BatchFacade wrapped, int cacheSize, boolean cacheOnWrite) {
         this(wrapped, cacheSize, cacheOnWrite, new SimpleMeterRegistry(), "");
     }
 
+    /**
+     * Creates a new caching facade.
+     *
+     * @param wrapped the underlying facade
+     * @param cacheSize the maximum number of cached entries
+     * @param cacheOnWrite whether to cache batches on write (write-through)
+     * @param metricRegistry the meter registry for metrics
+     * @param metricsTypeValue a tag value to distinguish cache metrics by type
+     */
     public CachingS3BatchFacade(S3BatchFacade wrapped, int cacheSize, boolean cacheOnWrite, MeterRegistry metricRegistry, String metricsTypeValue) {
         this.wrapped = wrapped;
         this.cacheOnWrite = cacheOnWrite;

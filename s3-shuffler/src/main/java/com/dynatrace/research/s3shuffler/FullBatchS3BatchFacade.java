@@ -49,10 +49,19 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
+/**
+ * {@link S3BatchFacade} decorator that implements partial batch reads by fetching the full
+ * object and slicing the relevant byte range locally.
+ */
 public class FullBatchS3BatchFacade implements S3BatchFacade {
 
     private final S3BatchFacade wrapped;
 
+    /**
+     * Creates a new decorator wrapping the given facade.
+     *
+     * @param wrapped the underlying facade
+     */
     public FullBatchS3BatchFacade(S3BatchFacade wrapped) {
         this.wrapped = wrapped;
     }
@@ -77,10 +86,20 @@ public class FullBatchS3BatchFacade implements S3BatchFacade {
         this.wrapped.close();
     }
 
+    /**
+     * A {@link SizeAwareInputStream} that exposes a contiguous byte range within a larger stream.
+     */
     public static class PartialSizeAwareInputStream extends SizeAwareInputStream {
 
         private int readBytes;
 
+        /**
+         * Creates a new partial stream scoped to the given byte range.
+         *
+         * @param delegate the full-batch stream
+         * @param offsetStart the start offset (inclusive)
+         * @param offsetEnd the end offset (exclusive)
+         */
         public PartialSizeAwareInputStream(SizeAwareInputStream delegate, int offsetStart, int offsetEnd) {
             super(delegate, offsetEnd - offsetStart);
             this.readBytes = -offsetStart;

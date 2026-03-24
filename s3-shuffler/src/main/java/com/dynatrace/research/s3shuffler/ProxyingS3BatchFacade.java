@@ -52,6 +52,11 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 
+/**
+ * {@link S3BatchFacade} decorator that routes read and write requests to the responsible
+ * cache cluster member via HTTP, using an object's hash for member selection.
+ * Starts an embedded HTTP server to serve requests forwarded by other members.
+ */
 public class ProxyingS3BatchFacade implements S3BatchFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyingS3BatchFacade.class);
@@ -72,10 +77,27 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
     //private final Counter cacheMissesCounter;
     //private final Timer cacheReadTimer;
 
+    /**
+     * Creates a new proxying facade using JGroups-based member discovery.
+     *
+     * @param wrapped the underlying facade
+     * @param zone the availability zone (used for the JGroups cluster name)
+     * @param advertisedHost the host:port advertised to other cache cluster members
+     * @param port the HTTP server port
+     * @param meterRegistry the meter registry for metrics
+     */
     public ProxyingS3BatchFacade(S3BatchFacade wrapped, String zone, String advertisedHost, int port, MeterRegistry meterRegistry) {
         this(wrapped, port, new JGroupsMemberDiscoverer(zone, advertisedHost + ':' + port), meterRegistry);
     }
 
+    /**
+     * Creates a new proxying facade with a custom member discoverer.
+     *
+     * @param wrapped the underlying facade
+     * @param port the HTTP server port
+     * @param memberDiscoverer the member discoverer
+     * @param meterRegistry the meter registry for metrics
+     */
     public ProxyingS3BatchFacade(S3BatchFacade wrapped, int port, MemberDiscoverer memberDiscoverer, MeterRegistry meterRegistry) {
         this.wrapped = wrapped;
 

@@ -32,6 +32,18 @@ import org.apache.kafka.streams.processor.api.ProcessorContext;
 import org.apache.kafka.streams.processor.internals.InternalProcessorContext;
 import org.apache.kafka.streams.processor.internals.ProcessorNode;
 
+/**
+ * Abstract base class for processors that need to perform actions before a Kafka Streams commit.
+ * <p>
+ * Subclasses must implement the {@link #preCommit()} method, which is called before each commit
+ * via the {@link ProcessorFlushStoreRegistry}. This class ensures that the correct processor
+ * context is set when the pre-commit callback is invoked.
+ *
+ * @param <KIn>  the type of input keys
+ * @param <VIn>  the type of input values
+ * @param <KOut> the type of output keys
+ * @param <VOut> the type of output values
+ */
 public abstract class AbstractCommitListenerProcessor<KIn, VIn, KOut, VOut> extends ContextualProcessor<KIn, VIn, KOut, VOut> {
 
     private final ProcessorFlushStoreRegistry processorFlushStoreRegistry;
@@ -73,5 +85,9 @@ public abstract class AbstractCommitListenerProcessor<KIn, VIn, KOut, VOut> exte
         }
     }
 
+    /**
+     * Called before each Kafka Streams commit. Subclasses must implement this method to perform
+     * any necessary pre-commit actions.
+     */
     protected abstract void preCommit();
 }

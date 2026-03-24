@@ -43,6 +43,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 
+/**
+ * {@link S3BatchFacade} implementation that performs direct PUT and GET operations on S3 or a compatible object storage
+ * service.
+ */
 public class BasicS3BatchFacade implements S3BatchFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BasicS3BatchFacade.class);
@@ -61,10 +65,23 @@ public class BasicS3BatchFacade implements S3BatchFacade {
 
     private final Timer getsTimer;
 
+    /**
+     * Creates a new facade with a default meter registry ({@link SimpleMeterRegistry}).
+     *
+     * @param s3Client the AWS {@link S3Client}
+     * @param bucketName the S3 bucket name
+     */
     public BasicS3BatchFacade(S3Client s3Client, String bucketName) {
         this(s3Client, bucketName, new SimpleMeterRegistry());
     }
 
+    /**
+     * Creates a new facade.
+     *
+     * @param s3Client the AWS {@link S3Client}
+     * @param bucketName the S3 bucket name
+     * @param meterRegistry the meter registry for metrics
+     */
     public BasicS3BatchFacade(S3Client s3Client, String bucketName, MeterRegistry meterRegistry) {
         this.s3Client = s3Client;
         this.bucketName = bucketName;
@@ -112,7 +129,7 @@ public class BasicS3BatchFacade implements S3BatchFacade {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        String eTag = response.eTag(); // Could be used as integrity check
+        // String eTag = response.eTag(); // Could be used as integrity check
         LOGGER.info("Wrote batch of {} bytes to object {}.", batchSizeInBytes, objectPath);
     }
 

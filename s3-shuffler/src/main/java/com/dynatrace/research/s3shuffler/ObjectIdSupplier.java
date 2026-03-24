@@ -30,6 +30,10 @@ package com.dynatrace.research.s3shuffler;
 import java.util.SplittableRandom;
 import java.util.function.Supplier;
 
+/**
+ * Generates unique, time-ordered object identifiers for S3 batches.
+ * Each identifier is composed of a hex-encoded timestamp followed by a random hex suffix.
+ */
 public class ObjectIdSupplier implements Supplier<String> {
 
     private final SplittableRandom randomNumberGenerator = new SplittableRandom();
