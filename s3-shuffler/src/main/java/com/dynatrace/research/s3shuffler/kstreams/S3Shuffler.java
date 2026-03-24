@@ -24,6 +24,27 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.*;
 
+/**
+ * Main entry point for integrating BlobShuffle into a Kafka Streams application.
+ * <p>
+ * Provides {@link ProcessorSupplier} factories for the Batcher and Debatcher operators
+ * and the repartitioning configuration that replaces a standard Kafka Streams
+ * {@code .repartition()} call.
+ * <p>
+ * Usage (abbreviated):
+ * <pre>
+ * S3Shuffler&lt;MyKey, MyValue&gt; shuffler = new S3Shuffler&lt;&gt;(...);
+ * builder.stream("input")
+ *        .process(shuffler.batcherSupplier())
+ *        .repartition(shuffler.repartitioned())
+ *        .process(shuffler.debatcherSupplier())
+ *        ...
+ * shuffler.close();
+ * </pre>
+ *
+ * @param <K> the record key type
+ * @param <V> the record value type
+ */
 public class S3Shuffler<K,V> implements Closeable {
 
     private final S3BatchFacade s3BatchFacade;
@@ -52,6 +73,22 @@ public class S3Shuffler<K,V> implements Closeable {
 
     private final TaskSharedBatcher taskSharedBatcher = new TaskSharedBatcher(); // TODO Has to be per thread
 
+    /**
+     * Creates a new S3Shuffler with the default partitioner ({@link Partitioner#KAFKA_BUILTIN})
+     * and a default {@link SimpleMeterRegistry}.
+     *
+     * @param s3Config S3 client and bucket configuration
+     * @param localCacheConfig local (per-instance) cache configuration
+     * @param distributedCacheConfig distributed (per-AZ) cache configuration
+     * @param zone the availability zone identifier of this instance
+     * @param keySerde the key serde
+     * @param valueSerde the value serde
+     * @param batchDesiredBytes the target batch size in bytes
+     * @param batchMaxDuration the maximum time before a batch is finalized
+     * @param repartitionName name for the internal repartitioning topic
+     * @param kafkaRackAssignmentRefreshInterval interval for refreshing the partition-to-rack
+     *                                           mapping; use {@link Duration#ZERO} to disable
+     */
     public S3Shuffler(
             S3Config s3Config,
             LocalCacheConfig localCacheConfig,
@@ -78,6 +115,22 @@ public class S3Shuffler<K,V> implements Closeable {
                 new SimpleMeterRegistry());
     }
 
+    /**
+     * Creates a new S3Shuffler with a custom partitioner and meter registry.
+     *
+     * @param s3Config S3 client and bucket configuration
+     * @param localCacheConfig local (per-instance) cache configuration
+     * @param distributedCacheConfig distributed (per-AZ) cache configuration
+     * @param zone the availability zone identifier of this instance
+     * @param keySerde the key serde
+     * @param valueSerde the value serde
+     * @param batchDesiredBytes the target batch size in bytes
+     * @param batchMaxDuration the maximum time before a batch is finalized
+     * @param repartitionName name for the internal repartitioning topic
+     * @param partitioner the partitioning strategy
+     * @param kafkaRackAssignmentRefreshInterval interval for refreshing the partition-to-rack mapping
+     * @param meterRegistry the meter registry for metrics
+     */
     public S3Shuffler(
             S3Config s3Config,
             LocalCacheConfig localCacheConfig,
@@ -107,6 +160,23 @@ public class S3Shuffler<K,V> implements Closeable {
                 meterRegistry);
     }
 
+    /**
+     * Creates a new S3Shuffler with a custom partitioner and static rack assignment,
+     * using a default {@link SimpleMeterRegistry}.
+     *
+     * @param s3Config S3 client and bucket configuration
+     * @param localCacheConfig local (per-instance) cache configuration
+     * @param distributedCacheConfig distributed (per-AZ) cache configuration
+     * @param zone the availability zone identifier of this instance
+     * @param keySerde the key serde
+     * @param valueSerde the value serde
+     * @param batchDesiredBytes the target batch size in bytes
+     * @param batchMaxDuration the maximum time before a batch is finalized
+     * @param repartitionName name for the internal repartitioning topic
+     * @param partitioner the partitioning strategy
+     * @param staticOutputPartitionsToRacks static mapping of output partition numbers to rack IDs
+     * @param kafkaRackAssignmentRefreshInterval interval for refreshing the partition-to-rack mapping
+     */
     public S3Shuffler(
             S3Config s3Config,
             LocalCacheConfig localCacheConfig,
@@ -136,6 +206,23 @@ public class S3Shuffler<K,V> implements Closeable {
                 new SimpleMeterRegistry());
     }
 
+    /**
+     * Creates a new S3Shuffler with full configuration.
+     *
+     * @param s3Config S3 client and bucket configuration
+     * @param localCacheConfig local (per-instance) cache configuration
+     * @param distributedCacheConfig distributed (per-AZ) cache configuration
+     * @param zone the availability zone identifier of this instance
+     * @param keySerde the key serde
+     * @param valueSerde the value serde
+     * @param batchDesiredBytes the target batch size in bytes
+     * @param batchMaxDuration the maximum time before a batch is finalized
+     * @param repartitionName name for the internal repartitioning topic
+     * @param partitioner the partitioning strategy
+     * @param staticOutputPartitionsToRacks static mapping of output partition numbers to rack IDs
+     * @param kafkaRackAssignmentRefreshInterval interval for refreshing the partition-to-rack mapping
+     * @param meterRegistry the meter registry for metrics
+     */
     public S3Shuffler(
             S3Config s3Config,
             LocalCacheConfig localCacheConfig,
@@ -179,6 +266,11 @@ public class S3Shuffler<K,V> implements Closeable {
         this.meterRegistry = meterRegistry;
     }
 
+    /**
+     * Returns a supplier for the Batcher processor.
+     *
+     * @return the batcher processor supplier
+     */
     public ProcessorSupplier<K, V, NotificationDestination, NotificationDetails> batcherSupplier() {
         return new S3BatcherProcessor.Supplier<>(
                 s3BatchFacade,
@@ -192,10 +284,21 @@ public class S3Shuffler<K,V> implements Closeable {
                 meterRegistry);
     }
 
+    /**
+     * Returns a supplier for the Debatcher processor.
+     *
+     * @return the debatcher processor supplier
+     */
     public ProcessorSupplier<NotificationDestination, NotificationDetails, K, V> debatcherSupplier() {
         return new S3DebatcherProcessor.Supplier<>(s3BatchFacade, keySerde, valueSerde, meterRegistry);
     }
 
+    /**
+     * Returns the {@link Repartitioned} configuration for the internal notification repartitioning
+     * step. Use with {@code .repartition(shuffler.repartitioned())}.
+     *
+     * @return the repartitioned configuration
+     */
     public Repartitioned<NotificationDestination, NotificationDetails> repartitioned() {
         return Repartitioned
                 .with(new NotificationDestinationSerde(), new NotificationDetailsSerde())
@@ -203,6 +306,12 @@ public class S3Shuffler<K,V> implements Closeable {
                 .withStreamPartitioner(new NotificationStreamPartitioner());
     }
 
+    /**
+     * Returns the {@link Produced} configuration for writing notifications to a Kafka topic
+     * in split topologies.
+     *
+     * @return the produced configuration
+     */
     public Produced<NotificationDestination, NotificationDetails> produced() {
         return Produced
                 .with(new NotificationDestinationSerde(), new NotificationDetailsSerde())
@@ -210,6 +319,12 @@ public class S3Shuffler<K,V> implements Closeable {
                 .withStreamPartitioner(new NotificationStreamPartitioner());
     }
 
+    /**
+     * Returns the {@link Consumed} configuration for reading notifications from a Kafka topic
+     * in split topologies.
+     *
+     * @return the consumed configuration
+     */
     public Consumed<NotificationDestination, NotificationDetails> consumed() {
         return Consumed
                 .with(new NotificationDestinationSerde(), new NotificationDetailsSerde());

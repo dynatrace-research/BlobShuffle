@@ -8,6 +8,10 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.time.Duration;
 
+/**
+ * {@link S3BatchFacade} composition that adds per-AZ distributed caching using an HTTP
+ * proxy and consistent hashing to route requests to the responsible cache node.
+ */
 public class DistributedCachingS3BatchFacade implements S3BatchFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DistributedCachingS3BatchFacade.class);
@@ -19,6 +23,17 @@ public class DistributedCachingS3BatchFacade implements S3BatchFacade {
     //private final Counter cacheMissesCounter;
     private final Timer proxyReadTimer;
 
+    /**
+     * Creates a new distributed caching facade.
+     *
+     * @param wrapped the underlying facade
+     * @param zone the availability zone of this instance
+     * @param advertisedHost the host advertised to other cache cluster members
+     * @param port the port for the cache HTTP server
+     * @param cacheSize the maximum number of cached entries
+     * @param cacheOnWrite whether to cache batches on write (write-through)
+     * @param meterRegistry the meter registry for metrics
+     */
     public DistributedCachingS3BatchFacade(
             S3BatchFacade wrapped,
             String zone,
