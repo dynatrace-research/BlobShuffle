@@ -65,11 +65,11 @@ Integrating BlobShuffle into an existing Kafka Streams application requires only
 The original repartition step is replaced by BlobShuffle's Batcher and Debatcher operators along with a repartitioning step configured by BlobShuffle:
 
 ```java
-import com.dynatrace.research.s3shuffler.*;
-import com.dynatrace.research.s3shuffler.kstreams.S3Shuffler;
+import com.dynatrace.research.blobshuffle.*;
+import com.dynatrace.research.blobshuffle.kstreams.BlobShuffle;
 
 // Configure BlobShuffle
-S3Shuffler<MyKey, MyValue> shuffler = new S3Shuffler<>(
+BlobShuffle<MyKey, MyValue> shuffler = new BlobShuffle<>(
     new S3Config(s3Client, "my-bucket-name"),
     LocalCacheConfig.disabled(),                 // or: LocalCacheConfig.enabled(cacheSizeBytes, cacheOnWrite)
     DistributedCacheConfig.disabled(),            // or: DistributedCacheConfig.enabled(cacheSizeBytes, cacheOnWrite, advertisedHost, port)
@@ -91,7 +91,6 @@ builder.stream("input-topic")
     .aggregate(...);
 ```
 
-> **Note:** The source code currently uses the class name `S3Shuffler` (and related names such as `S3Config`, `S3BatcherProcessor`, etc.). The paper refers to the approach as *BlobShuffle*.
 
 ### Prerequisites
 
@@ -118,7 +117,7 @@ The project uses Gradle with the included wrapper:
 
 ## Configuration Reference
 
-### `S3Shuffler` Constructor Parameters
+### `BlobShuffle` Constructor Parameters
 
 | Parameter | Type | Description |
 |---|---|---|
@@ -144,7 +143,7 @@ The project uses Gradle with the included wrapper:
 
 ### Example `application.properties`
 
-The included example application (`KafkaStreamsS3ShufflerExample`) uses [MicroProfile Config](https://microprofile.io/specifications/microprofile-config/) and can be configured via `application.properties` or environment variables:
+The included example application (`KafkaStreamsBlobShuffleExample`) uses [MicroProfile Config](https://microprofile.io/specifications/microprofile-config/) and can be configured via `application.properties` or environment variables:
 
 ```properties
 topology=Full
@@ -152,7 +151,7 @@ kafka.bootstrap.servers=localhost:9092
 kafka.topic.input=input
 kafka.topic.notifications=notifications
 kafka.topic.output=output
-s3.bucket=s3shuffler
+s3.bucket=blobshuffle
 batch.desired.bytes=16777216
 batch.max.ms=5000
 partitioner=KAFKA_BUILTIN
@@ -171,7 +170,7 @@ Kafka Streams properties can be set with the prefix `kafkastreams.`, e.g., `kafk
 
 ## Public API
 
-BlobShuffle's integration with Kafka Streams is provided through three methods on the `S3Shuffler` instance:
+BlobShuffle's integration with Kafka Streams is provided through three methods on the `BlobShuffle` instance:
 
 | Method | Returns | Description |
 |---|---|---|
@@ -192,9 +191,6 @@ For split topologies (separate Batcher and Debatcher sub-topologies):
 <!-- TODO: Add instructions and resources for reproducing the paper's experimental evaluation. -->
 
 The experimental evaluation from the paper will be documented here. Instructions for setting up the cloud-native benchmarking environment, running experiments, and reproducing the results will be provided in the future.
-
-The `evaluation/` directory contains collected measurement results and plotting scripts.
-
 
 ## Acknowledgments
 
