@@ -94,7 +94,7 @@ class KafkaStreamsBlobShuffleE2ETest {
             S3Client s3Client = createS3Client();
             String bucketName = "test-bucket";
             s3Client.createBucket(request -> request.bucket(bucketName));
-            ListBucketsResponse listBucketsResponse = s3Client.listBuckets();
+            ListBucketsResponse listBucketsResponse = s3Client.listBuckets(); // Will show max. 1000
             List<Bucket> allBuckets = listBucketsResponse.buckets();
             Assertions.assertTrue(allBuckets.stream().map(Bucket::name).anyMatch(name -> name.equals(bucketName)));
 
