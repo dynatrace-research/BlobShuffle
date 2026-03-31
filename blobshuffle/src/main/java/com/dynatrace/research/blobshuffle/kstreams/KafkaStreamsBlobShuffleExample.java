@@ -190,18 +190,6 @@ public class KafkaStreamsBlobShuffleExample {
 
   public void start() {
     this.kafkaStreamsApp.start();
-
-      try (ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor()) {
-          executor.scheduleAtFixedRate(() -> {
-              kafkaStreamsApp.metadataForLocalThreads().forEach(metadata -> {
-                  metadata.activeTasks().forEach(t -> {
-                      String topicPartitions = t.topicPartitions().stream().map(tp -> tp.topic() + ":" + tp.partition()).collect(Collectors.joining(","));
-                      LOGGER.info("This instance consumes Kafka topic partitions: {}", topicPartitions); // TODO DEBUG
-                  });
-              });
-          }, 10, 10, TimeUnit.SECONDS);
-      }
-
   }
 
   public void stop() {
