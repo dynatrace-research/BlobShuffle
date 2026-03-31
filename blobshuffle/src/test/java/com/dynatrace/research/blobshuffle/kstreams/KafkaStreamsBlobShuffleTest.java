@@ -194,6 +194,7 @@ class KafkaStreamsBlobShuffleE2ETest {
 
     private void createKafkaTopic(String bootstrapServers, String name) {
         Properties properties = new Properties();
+        properties.put(AdminClientConfig.CLIENT_ID_CONFIG, "e2e-test-topic-create-client");
         properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         try (AdminClient adminClient = AdminClient.create(properties)) {
             adminClient.createTopics(List.of(
