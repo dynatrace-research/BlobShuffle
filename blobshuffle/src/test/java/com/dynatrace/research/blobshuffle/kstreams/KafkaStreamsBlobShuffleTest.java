@@ -160,6 +160,9 @@ class KafkaStreamsBlobShuffleE2ETest {
             application.stop();
 
             // --- Phase 3: Consume output and verify ---
+            LOGGER.info("Wait 10 seconds for before consuming output records.");
+            Thread.sleep(10_000);
+
             LOGGER.info("Start consuming output records.");
             List<Integer> consumedRecords = consumeAllRecords(bootstrapServers, outputTopic);
             LOGGER.info("Consumed {} records.", consumedRecords.size());
