@@ -96,7 +96,7 @@ class KafkaStreamsBlobShuffleE2ETest {
             );
             application.start();
 
-            List<Integer> producedRecords = new ArrayList<>(2 * 1000 * 10);
+            List<Integer> producedRecords = new ArrayList<>(2 * 1000 * 30);
             KafkaLoadGenerator loadGenerator = new KafkaLoadGenerator(
                     "load-generator-0",
                     bootstrapServers,
@@ -107,53 +107,56 @@ class KafkaStreamsBlobShuffleE2ETest {
                     1024,
                     1,
                     Map.of(),
-                    //r -> producedRecords.add(hasher.hashBytesToInt(r.getData()))
-                    // Ignore last 8 bytes
+                    // Ignore last 8 bytes (they will be replaced by the timestamp in the output topic)
                     r -> producedRecords.add(hasher.hashBytesToInt(r.getData(), 0, r.getData().length - 8))
             );
             loadGenerator.startAsync();
 
-            Thread.sleep(60_000);
+            Thread.sleep(30_000);
 
             LOGGER.info("Shut down load generator.");
             loadGenerator.stop();
+            LOGGER.info("Produced {} records.", producedRecords.size());
 
-            LOGGER.info("Wait 10 seconds before shutting down Kafka Streams app.");
-            Thread.sleep(10_000);
-
-            LOGGER.info("Shut down Kafka Streams app.");
-            application.stop();
-
-            Thread.sleep(10_000);
-
-            // Get all output records
+            // Consume output while the app is still running so the pipeline
+            // can fully drain before we initiate shutdown (avoids S3 timeout
+            // errors during Kafka Streams flush/commit on close).
+            LOGGER.info("Start consuming output records while app is still running.");
             Properties consumerProperties = new Properties();
             consumerProperties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
             consumerProperties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "blobshuffle-test");
             consumerProperties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-            List<Integer> consumedRecords = new ArrayList<>(2 * 1000 * 10);
+            List<Integer> consumedRecords = new ArrayList<>(2 * 1000 * 30);
             try (KafkaConsumer<byte[], byte[]> consumer = new KafkaConsumer<>(
                     consumerProperties,
                     new ByteArrayDeserializer(),
                     new ByteArrayDeserializer())) {
                 consumer.subscribe(List.of(outputTopic));
-                while (true) {
+                int consecutiveEmptyPolls = 0;
+                int maxConsecutiveEmptyPolls = 40; // 40 x 500ms = 20s idle before giving up
+                while (consecutiveEmptyPolls < maxConsecutiveEmptyPolls) {
                     ConsumerRecords<byte[], byte[]> records = consumer.poll(Duration.ofMillis(500));
-                    //Set<TopicPartition> partitions = consumer.assignment();
-                    //consumer.seekToBeginning(partitions);
-                    //Map<TopicPartition, Long> endOffsets = consumer.endOffsets(partitions);
-                    //long summedOffsets = endOffsets.values().stream().mapToLong(x -> x).sum();
-                    //System.out.println("Summed offsets: " + summedOffsets);
                     if (records.isEmpty()) {
-                        break;
+                        consecutiveEmptyPolls++;
+                        continue;
                     }
+                    consecutiveEmptyPolls = 0;
                     for (ConsumerRecord<byte[], byte[]> record : records) {
-                        // consumedRecords.add(hasher.hashBytesToInt(record.value()));
-                        // Ignore last 8 bytes
+                        // Ignore last 8 bytes (which contain the timestamp)
                         consumedRecords.add(hasher.hashBytesToInt(record.value(), 0, record.value().length - 8));
                     }
+                    // Early exit once we have all expected records
+                    if (consumedRecords.size() >= producedRecords.size()) {
+                        LOGGER.info("Consumed all {} expected records.", consumedRecords.size());
+                        break;
+                    }
                 }
+                LOGGER.info("Consumer finished. Consumed {} of {} expected records.",
+                        consumedRecords.size(), producedRecords.size());
             }
+
+            LOGGER.info("Shut down Kafka Streams app.");
+            application.stop();
 
             Collections.sort(producedRecords);
             Collections.sort(consumedRecords);
