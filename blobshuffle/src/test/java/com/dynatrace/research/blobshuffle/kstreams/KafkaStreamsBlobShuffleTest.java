@@ -80,8 +80,6 @@ class KafkaStreamsBlobShuffleE2ETest {
             createKafkaTopic(bootstrapServers, inputTopic);
             createKafkaTopic(bootstrapServers, outputTopic);
 
-            // Use a long commit interval to avoid triggering flushes while
-            // the debatcher still has pending S3 fetches (LocalStack is slow in CI).
             KafkaStreamsBlobShuffleExample application = new KafkaStreamsBlobShuffleExample(
                     KafkaStreamsBlobShuffleExample.Topology.FULL,
                     Optional.of(zone),
