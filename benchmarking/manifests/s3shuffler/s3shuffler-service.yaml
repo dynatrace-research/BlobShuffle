@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: s3shuffler
+  labels:
+    app: s3shuffler
+spec:
+  selector:
+    app: s3shuffler
+  ports:
+  - name: cache
+    port: 7070
+  - name: metrics
+    port: 8080
+  - name: jmx
+    port: 5556
