@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s3shuffler
+spec:
+  selector:
+    matchLabels:
+      app: s3shuffler
+  replicas: 9
+  template:
+    metadata:
+      labels:
+        app: s3shuffler
+    spec:
+      terminationGracePeriodSeconds: 60
+      serviceAccountName: s3shuffler-s3
+      containers:
+        - name: s3-shuffler
+          # TODO: Replace with the image you built and pushed to your registry
+          image: <YOUR_REGISTRY>/blobshuffle:latest
+          env:
+            - name: TOPOLOGY
+              # "Full" uses both a batcher and a debatcher within a single Kafka Streams topology.
+              # "Batcher" runs only the batcher side (useful for split deployments).
+              value: "Full"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "theodolite-kafka-kafka-bootstrap:9092"
+            - name: S3_BUCKET
+              # TODO: Replace with your S3 bucket name
+              value: "<YOUR_S3_BUCKET>"
+            - name: BATCH_MAX_MS
+              # Maximum time (ms) to hold records before flushing a batch, regardless of size.
+              value: "30000"  # 30s
+            - name: BATCH_DESIRED_BYTES
+              # Target batch size in bytes.
+              value: "16777216"  # 16MB
+            - name: PARTITIONER
+              # Partitioning strategy for routing records to output partitions.
+              # Options: KAFKA_BUILTIN, KAFKA_OPTIMIZED, KOMIHASH4_3, KAFKA_4_2, RANDOM
+              value: "KAFKA_BUILTIN"
+            - name: CACHE_LOCAL_ENABLED
+              # Per-pod in-memory LRU cache for recently fetched S3 objects.
+              value: "false"
+            - name: CACHE_LOCAL_SIZE_BYTES
+              value: "4294967296"  # 4GB (only effective when CACHE_LOCAL_ENABLED=true)
+            - name: CACHE_DISTRIBUTED_ENABLED
+              # Cross-pod, per-AZ distributed cache for sharing fetched S3 objects.
+              value: "true"
+            - name: CACHE_DISTRIBUTED_SIZE_BYTES
+              value: "4294967296"  # 4GB (only effective when CACHE_DISTRIBUTED_ENABLED=true)
+            - name: CACHE_DISTRIBUTED_ADVERTISED_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: KAFKASTREAMS__SESSION_TIMEOUT_MS__
+              value: "60000"
+            - name: KAFKASTREAMS__REQUEST_TIMEOUT_MS__
+              value: "60000"
+            - name: SMALLRYE_CONFIG_LOCATIONS
+              value: "/app/config"
+            - name: JGROUPS_DNS_QUERY
+              value: "s3shuffler-jgroups.default.svc.cluster.local"
+            - name: jgroups.dns.query
+              value: "s3shuffler-jgroups.default.svc.cluster.local"
+            - name: KAFKASTREAMS__CLIENT_ID__
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.port=5555 -XX:MaxRAMPercentage=75.0"
+          ports:
+            - containerPort: 7070
+              name: cache
+            - containerPort: 8080
+              name: metrics
+          volumeMounts:
+            - name: podinfo
+              mountPath: /app/config
+          resources:
+            limits:
+              memory: 14Gi
+              #cpu: 1800m
+        - name: prometheus-jmx-exporter
+          image: "bitnamilegacy/jmx-exporter:0.20.0"
+          args:
+            - "5556"
+            - "/etc/jmx-aggregation/jmx-kafka-prometheus.yml"
+          ports:
+            - containerPort: 5556
+          volumeMounts:
+            - name: jmx-config
+              mountPath: /etc/jmx-aggregation
+      initContainers:
+        - name: zone-injector
+          # Reads the node's custom 'zone' label (set by label-nodegroup-sizes.sh) and writes it
+          # into a properties file consumed by BlobShuffle for intra-zone-aware routing.
+          image: bitnamilegacy/kubectl:latest
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              zone=$(kubectl get node $NODE_NAME -o jsonpath='{.metadata.labels.zone}')
+              if [ -z "$zone" ]; then
+                echo "Error: Failed to retrieve zone label for node $NODE_NAME" >&2
+                exit 1
+              fi
+              echo zone=$zone > /etc/podinfo/zone.properties
+          volumeMounts:
+            - name: podinfo
+              mountPath: /etc/podinfo
+      volumes:
+        - name: podinfo
+          emptyDir: {}
+        - name: jmx-config
+          configMap:
+            name: s3-shuffler-jmx-configmap
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: s3shuffler
+      nodeSelector:
+        type: sut
