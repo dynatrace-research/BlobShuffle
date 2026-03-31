@@ -12,7 +12,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
-import org.apache.kafka.streams.StreamsConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -98,7 +97,7 @@ class KafkaStreamsBlobShuffleE2ETest {
                     1024 * 1024,
                     Duration.ofSeconds(5),
                     Partitioner.KAFKA_BUILTIN,
-                    Map.of(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, "60000")
+                    Map.of()
             );
             application.start();
 
