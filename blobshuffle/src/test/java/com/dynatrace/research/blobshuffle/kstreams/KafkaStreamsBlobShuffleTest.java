@@ -80,10 +80,7 @@ class KafkaStreamsBlobShuffleE2ETest {
 
             S3Client s3Client = S3Client
                     .builder()
-                    .httpClient(Apache5HttpClient.builder()
-                            .maxConnections(100)
-                            .socketTimeout(Duration.ofMinutes(2))
-                            .build())
+                    .httpClient(Apache5HttpClient.builder().maxConnections(100).build())
                     .endpointOverride(localstack.getEndpoint())
                     .credentialsProvider(
                             StaticCredentialsProvider.create(
@@ -162,23 +159,23 @@ class KafkaStreamsBlobShuffleE2ETest {
                     new ByteArrayDeserializer(),
                     new ByteArrayDeserializer())) {
                 consumer.subscribe(List.of(outputTopic));
+                long deadlineMs = System.currentTimeMillis() + Duration.ofMinutes(3).toMillis();
                 int consecutiveEmptyPolls = 0;
-                int maxConsecutiveEmptyPolls = 40; // 40 x 500ms = 20s idle before giving up
-                while (consecutiveEmptyPolls < maxConsecutiveEmptyPolls) {
+                while (System.currentTimeMillis() < deadlineMs) {
                     ConsumerRecords<byte[], byte[]> records = consumer.poll(Duration.ofMillis(500));
                     if (records.isEmpty()) {
                         consecutiveEmptyPolls++;
+                        // Only give up on idle if we already have all expected records
+                        if (consumedRecords.size() >= producedRecords.size() && consecutiveEmptyPolls >= 10) {
+                            LOGGER.info("All {} expected records consumed and no more arriving.", consumedRecords.size());
+                            break;
+                        }
                         continue;
                     }
                     consecutiveEmptyPolls = 0;
                     for (ConsumerRecord<byte[], byte[]> record : records) {
                         // Ignore last 8 bytes (which contain the timestamp)
                         consumedRecords.add(hasher.hashBytesToInt(record.value(), 0, record.value().length - 8));
-                    }
-                    // Early exit once we have all expected records
-                    if (consumedRecords.size() >= producedRecords.size()) {
-                        LOGGER.info("Consumed all {} expected records.", consumedRecords.size());
-                        break;
                     }
                 }
                 LOGGER.info("Consumer finished. Consumed {} of {} expected records.",
