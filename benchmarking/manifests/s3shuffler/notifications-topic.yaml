@@ -1,0 +1,13 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: notifications
+  labels:
+    strimzi.io/cluster: theodolite-kafka
+spec:
+  # The notifications topic carries compact S3 object references (not the payload data).
+  # Partition count is not auto-scaled by Theodolite; 100 partitions is a reasonable default.
+  partitions: 100
+  replicas: 1
+  config:
+    message.timestamp.type: LogAppendTime

@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: s3shuffler
+  name: s3shuffler
+spec:
+  selector:
+    matchLabels:
+        app: s3shuffler
+  endpoints:
+    - port: metrics
+      interval: 10s
+    - port: jmx
+      interval: 10s
