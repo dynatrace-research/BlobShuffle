@@ -80,7 +80,10 @@ class KafkaStreamsBlobShuffleE2ETest {
 
             S3Client s3Client = S3Client
                     .builder()
-                    .httpClient(Apache5HttpClient.builder().maxConnections(100).build())
+                    .httpClient(Apache5HttpClient.builder()
+                            .maxConnections(100)
+                            .socketTimeout(Duration.ofMinutes(2))
+                            .build())
                     .endpointOverride(localstack.getEndpoint())
                     .credentialsProvider(
                             StaticCredentialsProvider.create(
