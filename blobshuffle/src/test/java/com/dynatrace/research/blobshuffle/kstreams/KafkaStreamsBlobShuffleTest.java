@@ -57,8 +57,8 @@ class KafkaStreamsBlobShuffleE2ETest {
     void testWith3NodeKafkaCluster() throws Exception {
         // Use low throughput so the pipeline can keep up in CI and
         // all batches are drained before shutdown.
-        int recordsPerSecond = 200;
-        int loadDurationSeconds = 15;
+        int recordsPerSecond = 1000;
+        int loadDurationSeconds = 30;
 
         try (KafkaContainerCluster cluster = new KafkaContainerCluster(3, 3)) {
             cluster.start();
