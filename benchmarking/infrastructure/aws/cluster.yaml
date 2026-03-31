@@ -107,7 +107,7 @@ iam:
     # The referenced policy must grant s3:GetObject, s3:PutObject, s3:DeleteObject
     # on your benchmark S3 bucket
     - metadata:
-        name: s3shuffler-s3
+        name: blobshuffle-s3
       attachPolicyARNs:
         - "arn:aws:iam::<AWS_ACCOUNT_ID>:policy/<YOUR_S3_POLICY_NAME>"
     # Service account for the AWS Mountpoint S3 CSI driver (used by Theodolite for result storage)

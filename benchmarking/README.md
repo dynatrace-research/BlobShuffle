@@ -24,7 +24,7 @@ benchmarking/
 │       ├── label-nodegroup-sizes.sh      # Labels SUT nodes for topology-aware scheduling
 │       └── show-pods-by-zone.sh          # Debugging: show BlobShuffle pods grouped by zone
 ├── manifests/
-│   ├── s3shuffler/                       # BlobShuffle system-under-test manifests
+│   ├── blobshuffle/                       # BlobShuffle system-under-test manifests
 │   └── load-generator/                   # Load generator manifests
 ├── helm-values/
 │   ├── values.yaml                       # Base Theodolite Helm values (Kafka, Prometheus)
@@ -132,12 +132,12 @@ kubectl wait kafka/theodolite-kafka --for=condition=Ready --timeout=5m
 BlobShuffle pods need to read node labels to determine their zone. Apply the required RBAC:
 
 ```sh
-kubectl apply -f manifests/s3shuffler/s3shuffler-rbac.yaml
+kubectl apply -f manifests/blobshuffle/blobshuffle-rbac.yaml
 ```
 
 ### 2.3 Deploy BlobShuffle
 
-Before applying, review and adjust the following in `manifests/s3shuffler/s3shuffler-deployment.yaml`:
+Before applying, review and adjust the following in `manifests/blobshuffle/blobshuffle-deployment.yaml`:
 - `image`: your container registry and image tag
 - `S3_BUCKET`: your S3 bucket name
 - `replicas`: desired number of BlobShuffle instances
@@ -146,13 +146,13 @@ Before applying, review and adjust the following in `manifests/s3shuffler/s3shuf
 - `partitions` in `input-topic.yaml` and `output-topic.yaml`: for best performance set this to `replicas × k` where k is a multiple of 3 (e.g. 9 is a good default)
 
 ```sh
-kubectl apply -f manifests/s3shuffler/
+kubectl apply -f manifests/blobshuffle/
 ```
 
 Wait for pods to become ready:
 
 ```sh
-kubectl rollout status deployment/s3shuffler
+kubectl rollout status deployment/blobshuffle
 ```
 
 ### 2.4 Deploy the load generator
@@ -190,7 +190,7 @@ kubectl port-forward svc/prometheus-operated 9090:9090
 ```sh
 kubectl delete -f manifests/load-generator/
 # Wait for load generator to stop (~30s)
-kubectl delete -f manifests/s3shuffler/
+kubectl delete -f manifests/blobshuffle/
 ```
 
 ---
@@ -222,7 +222,7 @@ kubectl wait kafka/theodolite-kafka --for=condition=Ready --timeout=5m
 ### 3.2 Apply RBAC
 
 ```sh
-kubectl apply -f manifests/s3shuffler/s3shuffler-rbac.yaml
+kubectl apply -f manifests/blobshuffle/blobshuffle-rbac.yaml
 ```
 
 ### 3.3 Install the benchmark definition
@@ -239,7 +239,7 @@ kubectl create configmap blobshuffle-resources-load-generator \
   --from-file manifests/load-generator/
 
 kubectl create configmap blobshuffle-resources \
-  --from-file manifests/s3shuffler/
+  --from-file manifests/blobshuffle/
 
 kubectl apply -f theodolite/benchmark.yaml
 ```
@@ -247,7 +247,7 @@ kubectl apply -f theodolite/benchmark.yaml
 Verify the benchmark was accepted:
 
 ```sh
-kubectl get benchmark s3shuffler
+kubectl get benchmark blobshuffle
 ```
 
 ### 3.4 Run benchmark executions
@@ -256,7 +256,7 @@ Each file in `theodolite/executions/` is a Theodolite `Execution` resource that 
 
 ```sh
 # Example: scalability experiment with 12 instances on 6-node cluster
-kubectl apply -f theodolite/executions/scalability/s3shuffler-nodes-6-instances-12.yaml
+kubectl apply -f theodolite/executions/scalability/blobshuffle-nodes-6-instances-12.yaml
 ```
 
 Watch progress:
