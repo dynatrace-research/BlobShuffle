@@ -5,7 +5,7 @@ declare -A node_pods
 
 set -euo pipefail
 
-# Show blobshuffle pods grouped by node and zone (uses a constant number of kubectl calls)
+# Show BlobShuffle pods grouped by node and zone (uses a constant number of kubectl calls)
 
 # One kubectl call to list pods+node, and one to list nodes+zone labels
 pods_data=$(kubectl get pods -l app=blobshuffle -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.nodeName}{"\n"}{end}')
