@@ -1,22 +1,22 @@
 apiVersion: theodolite.rocks/v1beta1
 kind: benchmark
 metadata:
-  name: s3shuffler
+  name: blobshuffle
 spec:
   sut:
     resources:
       - configMap:
-          name: s3shuffler-resources
+          name: blobshuffle-resources
           files:
           - "input-topic.yaml"
           - "notifications-topic.yaml"
           - "output-topic.yaml"
-          - "s3shuffler-deployment.yaml"
-          - "s3shuffler-jgroups-service.yaml"
-          - "s3shuffler-jmx-configmap.yaml"
-          #- "s3shuffler-rbac.yaml"
-          - "s3shuffler-service-monitor.yaml"
-          - "s3shuffler-service.yaml"
+          - "blobshuffle-deployment.yaml"
+          - "blobshuffle-jgroups-service.yaml"
+          - "blobshuffle-jmx-configmap.yaml"
+          #- "blobshuffle-rbac.yaml"
+          - "blobshuffle-service-monitor.yaml"
+          - "blobshuffle-service.yaml"
     afterActions:
       - delete:
           selector:
@@ -34,7 +34,7 @@ spec:
     - typeName: "Instances"
       patchers:
         - type: "ReplicaPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
           properties:
@@ -50,7 +50,7 @@ spec:
     - typeName: "Instances-x3Partitions"
       patchers:
         - type: "ReplicaPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
           properties:
@@ -66,7 +66,7 @@ spec:
     - typeName: "Instances-x6Partitions"
       patchers:
         - type: "ReplicaPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
           properties:
@@ -82,7 +82,7 @@ spec:
     - typeName: "Instances-x9Partitions"
       patchers:
         - type: "ReplicaPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
           properties:
@@ -98,7 +98,7 @@ spec:
     - typeName: "Instances-x12Partitions"
       patchers:
         - type: "ReplicaPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
           properties:
@@ -114,7 +114,7 @@ spec:
     - typeName: "Instances-x15Partitions"
       patchers:
         - type: "ReplicaPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
           properties:
@@ -130,7 +130,7 @@ spec:
     - typeName: "Instances-x18Partitions"
       patchers:
         - type: "ReplicaPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
           properties:
@@ -146,7 +146,7 @@ spec:
     - typeName: "Instances-x21Partitions"
       patchers:
         - type: "ReplicaPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
           properties:
@@ -162,7 +162,7 @@ spec:
     - typeName: "Instances-x24Partitions"
       patchers:
         - type: "ReplicaPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
           properties:
@@ -178,7 +178,7 @@ spec:
     - typeName: "Instances-x27Partitions"
       patchers:
         - type: "ReplicaPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
           properties:
@@ -194,7 +194,7 @@ spec:
     - typeName: "Instances-x30Partitions"
       patchers:
         - type: "ReplicaPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
           properties:
@@ -218,9 +218,9 @@ spec:
     - typeName: "BatchDesiredBytes"
       patchers:
         - type: "EnvVarPatcher"
-          resource: "s3shuffler-deployment.yaml"
+          resource: "blobshuffle-deployment.yaml"
           properties:
-            container: "s3-shuffler"
+            container: "blobshuffle"
             variableName: "BATCH_DESIRED_BYTES"
   slos:
     - name: "lag trend"
@@ -2364,7 +2364,7 @@ spec:
       properties:
         takeOnlyFirstMetric: False
         externalSloUrl: "http://localhost:8082"
-        promQLQuery: "rate(container_cpu_usage_seconds_total{pod=~\"s3shuffler-.+\",container=\"s3-shuffler\"}[30s])"
+        promQLQuery: "rate(container_cpu_usage_seconds_total{pod=~\"blobshuffle-.+\",container=\"blobshuffle\"}[30s])"
         queryAggregation: mean
         repetitionAggregation: median
         operator: "true"
@@ -2377,7 +2377,7 @@ spec:
       properties:
         takeOnlyFirstMetric: False
         externalSloUrl: "http://localhost:8082"
-        promQLQuery: "rate(container_cpu_usage_seconds_total{pod=~\"s3shuffler-.+\",container=\"s3-shuffler\"}[60s])"
+        promQLQuery: "rate(container_cpu_usage_seconds_total{pod=~\"blobshuffle-.+\",container=\"blobshuffle\"}[60s])"
         queryAggregation: mean
         repetitionAggregation: median
         operator: "true"
@@ -2390,7 +2390,7 @@ spec:
       properties:
         takeOnlyFirstMetric: False
         externalSloUrl: "http://localhost:8082"
-        promQLQuery: "irate(container_cpu_usage_seconds_total{pod=~\"s3shuffler-.+\",container=\"s3-shuffler\"}[30s])"
+        promQLQuery: "irate(container_cpu_usage_seconds_total{pod=~\"blobshuffle-.+\",container=\"blobshuffle\"}[30s])"
         queryAggregation: mean
         repetitionAggregation: median
         operator: "true"
@@ -2403,7 +2403,7 @@ spec:
       properties:
         takeOnlyFirstMetric: False
         externalSloUrl: "http://localhost:8082"
-        promQLQuery: "irate(container_cpu_usage_seconds_total{pod=~\"s3shuffler-.+\",container=\"s3-shuffler\"}[60s])"
+        promQLQuery: "irate(container_cpu_usage_seconds_total{pod=~\"blobshuffle-.+\",container=\"blobshuffle\"}[60s])"
         queryAggregation: mean
         repetitionAggregation: median
         operator: "true"
