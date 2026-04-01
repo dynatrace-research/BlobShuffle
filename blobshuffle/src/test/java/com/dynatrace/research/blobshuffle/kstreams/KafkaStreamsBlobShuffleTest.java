@@ -13,6 +13,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.awaitility.Awaitility;
@@ -36,6 +37,7 @@ import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
@@ -127,16 +129,21 @@ class KafkaStreamsBlobShuffleE2ETest {
             LOGGER.info("Produced {} records.", producedRecords.size());
 
             // --- Phase 2: Wait for pipeline to drain, then stop ---
-            // Wait until the output topic contains all produced records.
-            LOGGER.info("Wait for all {} produced records to appear in the output topic.", producedRecords.size());
-            Awaitility.await()
-                    .atMost(Duration.ofMinutes(2))
-                    .pollInterval(Duration.ofSeconds(2))
-                    .untilAsserted(() -> {
-                        long totalRecords = getTopicRecordCount(bootstrapServers, outputTopic);
-                        LOGGER.info("Output topic has {} / {} records.", totalRecords, producedRecords.size());
-                        assertThat(totalRecords).isGreaterThanOrEqualTo(producedRecords.size());
-                    });
+            // Wait until Kafka Streams has consumed all records from the input topic.
+            Properties adminProps = new Properties();
+            adminProps.put(AdminClientConfig.CLIENT_ID_CONFIG, "e2e-test-drain-admin-client");
+            adminProps.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+            try (AdminClient adminClient = AdminClient.create(adminProps)) {
+                LOGGER.info("Wait for Kafka Streams to consume all records from the input topic.");
+                Awaitility.await()
+                        .atMost(Duration.ofMinutes(2))
+                        .pollInterval(Duration.ofSeconds(2))
+                        .untilAsserted(() -> {
+                            long lag = getInputTopicLag(adminClient, inputTopic, "blobshuffle-kstreams");
+                            LOGGER.info("Input topic consumer lag: {}.", lag);
+                            assertThat(lag).isZero();
+                        });
+            }
 
             LOGGER.info("Shut down Kafka Streams app.");
             application.stop();
@@ -212,24 +219,27 @@ class KafkaStreamsBlobShuffleE2ETest {
         }
     }
 
-    private long getTopicRecordCount(String bootstrapServers, String topic) throws Exception {
-        Properties properties = new Properties();
-        properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        try (AdminClient adminClient = AdminClient.create(properties)) {
-            List<TopicPartition> partitions = adminClient.describeTopics(List.of(topic))
-                    .allTopicNames().get()
-                    .get(topic)
-                    .partitions().stream()
-                    .map(info -> new TopicPartition(topic, info.partition()))
-                    .toList();
-            Map<TopicPartition, OffsetSpec> request = new HashMap<>();
-            for (TopicPartition tp : partitions) {
-                request.put(tp, OffsetSpec.latest());
-            }
-            Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> offsets =
-                    adminClient.listOffsets(request).all().get();
-            return offsets.values().stream().mapToLong(ListOffsetsResult.ListOffsetsResultInfo::offset).sum();
+    private long getInputTopicLag(AdminClient adminClient, String inputTopic, String applicationId) throws Exception {
+        Map<TopicPartition, OffsetAndMetadata> committedOffsets = adminClient
+                .listConsumerGroupOffsets(applicationId)
+                .partitionsToOffsetAndMetadata().get()
+                .entrySet().stream()
+                .filter(e -> e.getKey().topic().equals(inputTopic))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        if (committedOffsets.isEmpty()) {
+            // No offsets committed yet — Kafka Streams has not started consuming
+            return Long.MAX_VALUE;
         }
+
+        Map<TopicPartition, OffsetSpec> request = committedOffsets.keySet().stream()
+                .collect(Collectors.toMap(tp -> tp, tp -> OffsetSpec.latest()));
+        Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> endOffsets =
+                adminClient.listOffsets(request).all().get();
+
+        return committedOffsets.entrySet().stream()
+                .mapToLong(e -> endOffsets.get(e.getKey()).offset() - e.getValue().offset())
+                .sum();
     }
 
 }
