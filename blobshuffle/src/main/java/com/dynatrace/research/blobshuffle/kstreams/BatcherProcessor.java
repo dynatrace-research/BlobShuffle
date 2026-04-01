@@ -282,15 +282,11 @@ public class BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K, V
 
     @Override
     public void preCommit() {
-        System.out.println("Started commit process. Will finalize all batches.");
-
-
-        //internalContext.forward(notification);
-        System.out.println("Initiate finalization of all batches now.");
+        LOGGER.info("Start commit process. Finalize all batches now.");
         this.finalizeBatch(); // Might block if there are too many in flight calls; no pending batches should be there anymore
-        System.out.println("All batches have been scheduled for transfer to S3. Now wait for results.");
+        LOGGER.info("All batches have been scheduled for transfer to S3. Now wait for results.");
         this.drainAsyncResults(); // Might block if the results to be collected
-        System.out.println("All results have been collected and notifications should have been forwarded.");
+        LOGGER.info("All results have been collected and notifications should have been forwarded.");
     }
 
     public static class Supplier<K, V> extends AbstractCommitListenerProcessorSupplier<K, V, NotificationDestination, NotificationDetails> {
