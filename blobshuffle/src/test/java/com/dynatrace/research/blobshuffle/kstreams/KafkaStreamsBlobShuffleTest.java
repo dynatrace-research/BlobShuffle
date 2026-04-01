@@ -6,12 +6,16 @@ import com.dynatrace.research.blobshuffle.*;
 import com.dynatrace.research.shufflebench.KafkaLoadGenerator;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.ListOffsetsResult;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.admin.OffsetSpec;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -123,11 +127,16 @@ class KafkaStreamsBlobShuffleE2ETest {
             LOGGER.info("Produced {} records.", producedRecords.size());
 
             // --- Phase 2: Wait for pipeline to drain, then stop ---
-            // batchMaxDuration is 5s, so the last batch is flushed within ~5s.
-            // Then S3 write + notification + repartition + S3 read + output.
-            // Give plenty of time for this to complete in CI.
-            LOGGER.info("Wait 30 seconds for the pipeline to drain.");
-            Thread.sleep(30_000);
+            // Wait until the output topic contains all produced records.
+            LOGGER.info("Wait for all {} produced records to appear in the output topic.", producedRecords.size());
+            Awaitility.await()
+                    .atMost(Duration.ofMinutes(2))
+                    .pollInterval(Duration.ofSeconds(2))
+                    .untilAsserted(() -> {
+                        long totalRecords = getTopicRecordCount(bootstrapServers, outputTopic);
+                        LOGGER.info("Output topic has {} / {} records.", totalRecords, producedRecords.size());
+                        assertThat(totalRecords).isGreaterThanOrEqualTo(producedRecords.size());
+                    });
 
             LOGGER.info("Shut down Kafka Streams app.");
             application.stop();
@@ -200,6 +209,26 @@ class KafkaStreamsBlobShuffleE2ETest {
         try (AdminClient adminClient = AdminClient.create(properties)) {
             adminClient.createTopics(List.of(
                     new NewTopic(name, 3, (short) 1)));
+        }
+    }
+
+    private long getTopicRecordCount(String bootstrapServers, String topic) throws Exception {
+        Properties properties = new Properties();
+        properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        try (AdminClient adminClient = AdminClient.create(properties)) {
+            List<TopicPartition> partitions = adminClient.describeTopics(List.of(topic))
+                    .allTopicNames().get()
+                    .get(topic)
+                    .partitions().stream()
+                    .map(info -> new TopicPartition(topic, info.partition()))
+                    .toList();
+            Map<TopicPartition, OffsetSpec> request = new HashMap<>();
+            for (TopicPartition tp : partitions) {
+                request.put(tp, OffsetSpec.latest());
+            }
+            Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> offsets =
+                    adminClient.listOffsets(request).all().get();
+            return offsets.values().stream().mapToLong(ListOffsetsResult.ListOffsetsResultInfo::offset).sum();
         }
     }
 
