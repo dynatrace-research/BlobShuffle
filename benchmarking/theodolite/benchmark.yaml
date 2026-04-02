@@ -26,7 +26,7 @@ spec:
   loadGenerator:
     resources:
       - configMap:
-          name: shufflebench-resources-load-generator  
+          name: blobshuffle-load-generator-resources
           files:
           - "shuffle-load-generator-service.yaml"
           - "shuffle-load-generator-deployment.yaml"

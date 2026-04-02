@@ -91,11 +91,12 @@ kubectl apply -f infrastructure/aws/kafka-storage-class.yaml
 
 BlobShuffle spreads pods across three simulated availability zones (labels `zone-1`, `zone-2`, `zone-3`). The `label-nodegroup-sizes.sh` script adds `nodegroup-size-N=true` labels that Theodolite uses to constrain pods to a specific number of nodes per zone.
 
-Run it with the number of nodes per SUT nodegroup you want to use (up to `desiredCapacity`):
+Run it with the number of nodes per SUT nodegroup you want to use (up to `desiredCapacity`), or omit the argument to auto-detect N as the minimum number of SUT nodes across all zones:
 
 ```sh
-./infrastructure/scripts/label-nodegroup-sizes.sh <N>
-# Example: 8 nodes per zone → N=8
+# Auto-detect N from the cluster
+./infrastructure/scripts/label-nodegroup-sizes.sh
+# Or specify explicitly: 8 nodes per zone → N=8
 ./infrastructure/scripts/label-nodegroup-sizes.sh 8
 ```
 
@@ -232,10 +233,10 @@ Theodolite reads the SUT and load-generator manifests from Kubernetes ConfigMaps
 ```sh
 # Re-create ConfigMaps (run this whenever manifests change)
 kubectl delete configmaps --ignore-not-found=true \
-  blobshuffle-resources-load-generator \
+  blobshuffle-load-generator-resources \
   blobshuffle-resources
 
-kubectl create configmap blobshuffle-resources-load-generator \
+kubectl create configmap blobshuffle-load-generator-resources \
   --from-file manifests/load-generator/
 
 kubectl create configmap blobshuffle-resources \
