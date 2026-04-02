@@ -1,0 +1,36 @@
+apiVersion: theodolite.rocks/v1beta1
+kind: execution
+metadata:
+  name: blobshuffle-instances-6-nodes-3-kafka-4-2
+spec:
+  benchmark: blobshuffle
+  load:
+    loadType: "BatchDesiredBytes"
+    loadValues: [16777216] # 16MB
+  resources:
+    resourceType: "Instances"
+    resourceValues: [6]
+  slos:
+    - name: throughput
+      properties: {}
+  execution:
+    metric: capacity
+    strategy:
+      name: "FullSearch"
+    duration: 600 # in seconds
+    loadGenerationDelay: 30 # in seconds
+    repetitions: 1
+  configOverrides:
+    - patcher:
+        type: "NodeSelectorPatcher"
+        resource: "blobshuffle-deployment.yaml"
+        properties:
+          variableName: "nodegroup-size-3"
+      value: "true"
+    - patcher:
+        type: "EnvVarPatcher"
+        resource: "blobshuffle-deployment.yaml"
+        properties:
+          container: "blobshuffle"
+          variableName: "PARTITIONER"
+      value: "KAFKA_4_2"
