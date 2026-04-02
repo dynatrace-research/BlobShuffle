@@ -36,6 +36,7 @@ import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -215,8 +216,33 @@ class KafkaStreamsBlobShuffleE2ETest {
         properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         try (AdminClient adminClient = AdminClient.create(properties)) {
             adminClient.createTopics(List.of(
-                    new NewTopic(name, 3, (short) 1)));
+                    new NewTopic(name, 3, (short) 1))).all().get();
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
         }
+    }
+
+    private long getInputTopicLag(AdminClient adminClient, String inputTopic, String applicationId) throws Exception {
+        Map<TopicPartition, OffsetAndMetadata> committedOffsets = adminClient
+                .listConsumerGroupOffsets(applicationId)
+                .partitionsToOffsetAndMetadata().get()
+                .entrySet().stream()
+                .filter(e -> e.getKey().topic().equals(inputTopic))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        if (committedOffsets.isEmpty()) {
+            // No offsets committed yet — Kafka Streams has not started consuming
+            return Long.MAX_VALUE;
+        }
+
+        Map<TopicPartition, OffsetSpec> request = committedOffsets.keySet().stream()
+                .collect(Collectors.toMap(tp -> tp, tp -> OffsetSpec.latest()));
+        Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> endOffsets =
+                adminClient.listOffsets(request).all().get();
+
+        return committedOffsets.entrySet().stream()
+                .mapToLong(e -> endOffsets.get(e.getKey()).offset() - e.getValue().offset())
+                .sum();
     }
 
     private long getInputTopicLag(AdminClient adminClient, String inputTopic, String applicationId) throws Exception {
