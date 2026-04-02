@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  name: blobshuffle-jgroups
+  labels:
+    app: blobshuffle
+spec:
+  publishNotReadyAddresses: true
+  clusterIP: None
+  selector:
+    app: blobshuffle
+  ports:
+    - name: ping
+      port: 7800
+      protocol: TCP
+      targetPort: 7800

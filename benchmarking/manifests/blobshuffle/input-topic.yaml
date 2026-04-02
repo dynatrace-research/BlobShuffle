@@ -1,0 +1,15 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: input
+  labels:
+    strimzi.io/cluster: theodolite-kafka
+spec:
+  # For best performance, set to replicas × k where k is a multiple of 3.
+  # k=9 is the default used in the Theodolite benchmark definition.
+  # Theodolite overrides this automatically during benchmarking.
+  # Example with k=9: 3 instances → 27 partitions, 6 instances → 54 partitions, 9 instances → 81 partitions
+  partitions: 81
+  replicas: 1
+  config:
+    message.timestamp.type: LogAppendTime
