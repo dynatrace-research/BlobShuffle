@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: blobshuffle
+  name: blobshuffle
+spec:
+  selector:
+    matchLabels:
+        app: blobshuffle
+  endpoints:
+    - port: metrics
+      interval: 10s
+    - port: jmx
+      interval: 10s
