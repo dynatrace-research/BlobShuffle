@@ -58,6 +58,7 @@ import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.*;
@@ -226,7 +227,9 @@ class KafkaStreamsBlobShuffleE2ETest {
         properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         try (AdminClient adminClient = AdminClient.create(properties)) {
             adminClient.createTopics(List.of(
-                    new NewTopic(name, 10, (short) 1)));
+                    new NewTopic(name, 10, (short) 1))).all().get();
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
