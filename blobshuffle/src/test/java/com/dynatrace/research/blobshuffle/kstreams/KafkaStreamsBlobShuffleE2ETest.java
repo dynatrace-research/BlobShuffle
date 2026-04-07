@@ -87,6 +87,8 @@ class KafkaStreamsBlobShuffleE2ETest {
             createKafkaTopic(bootstrapServers, inputTopic);
             createKafkaTopic(bootstrapServers, outputTopic);
 
+            Thread.sleep(10_000); // Wait for topics to be fully ready
+
             KafkaStreamsBlobShuffleExample application = new KafkaStreamsBlobShuffleExample(
                     KafkaStreamsBlobShuffleExample.Topology.FULL,
                     Optional.of(zone),
@@ -220,29 +222,6 @@ class KafkaStreamsBlobShuffleE2ETest {
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private long getInputTopicLag(AdminClient adminClient, String inputTopic, String applicationId) throws Exception {
-        Map<TopicPartition, OffsetAndMetadata> committedOffsets = adminClient
-                .listConsumerGroupOffsets(applicationId)
-                .partitionsToOffsetAndMetadata().get()
-                .entrySet().stream()
-                .filter(e -> e.getKey().topic().equals(inputTopic))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
-        if (committedOffsets.isEmpty()) {
-            // No offsets committed yet — Kafka Streams has not started consuming
-            return Long.MAX_VALUE;
-        }
-
-        Map<TopicPartition, OffsetSpec> request = committedOffsets.keySet().stream()
-                .collect(Collectors.toMap(tp -> tp, tp -> OffsetSpec.latest()));
-        Map<TopicPartition, ListOffsetsResult.ListOffsetsResultInfo> endOffsets =
-                adminClient.listOffsets(request).all().get();
-
-        return committedOffsets.entrySet().stream()
-                .mapToLong(e -> endOffsets.get(e.getKey()).offset() - e.getValue().offset())
-                .sum();
     }
 
     private long getInputTopicLag(AdminClient adminClient, String inputTopic, String applicationId) throws Exception {
