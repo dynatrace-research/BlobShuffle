@@ -1,5 +1,6 @@
 package com.dynatrace.research.blobshuffle.kstreams;
 
+import com.dynatrace.research.blobshuffle.AsyncResult;
 import com.dynatrace.research.blobshuffle.BatchCollector;
 
 import java.util.HashMap;
