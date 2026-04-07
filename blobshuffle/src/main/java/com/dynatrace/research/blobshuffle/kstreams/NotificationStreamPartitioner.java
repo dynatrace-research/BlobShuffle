@@ -27,6 +27,8 @@
  */
 package com.dynatrace.research.blobshuffle.kstreams;
 
+import com.dynatrace.research.blobshuffle.NotificationDestination;
+import com.dynatrace.research.blobshuffle.NotificationDetails;
 import org.apache.kafka.streams.processor.StreamPartitioner;
 
 import java.util.Collections;
