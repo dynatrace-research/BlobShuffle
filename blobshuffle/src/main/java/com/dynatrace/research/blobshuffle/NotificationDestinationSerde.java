@@ -1,4 +1,4 @@
-package com.dynatrace.research.blobshuffle.kstreams;
+package com.dynatrace.research.blobshuffle;
 
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;

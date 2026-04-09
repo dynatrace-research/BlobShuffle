@@ -1,0 +1,29 @@
+apiVersion: theodolite.rocks/v1beta1
+kind: execution
+metadata:
+  name: blobshuffle-nodes-24-instances-48
+spec:
+  benchmark: blobshuffle
+  load:
+    loadType: "BatchDesiredBytes"
+    loadValues: [16777216] # 16MB
+  resources:
+    resourceType: "Instances"
+    resourceValues: [48]
+  slos:
+    - name: throughput
+      properties: {}
+  execution:
+    metric: capacity
+    strategy:
+      name: "FullSearch"
+    duration: 900 # in seconds
+    loadGenerationDelay: 30 # in seconds
+    repetitions: 4
+  configOverrides:
+    - patcher:
+        type: "NodeSelectorPatcher"
+        resource: "blobshuffle-deployment.yaml"
+        properties:
+          variableName: "nodegroup-size-24"
+      value: "true"
