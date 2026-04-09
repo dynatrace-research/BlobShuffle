@@ -70,16 +70,7 @@ eksctl create cluster -f infrastructure/aws/cluster.yaml
 
 > **Cost warning**: The full cluster configuration (infra + 3 × 8 SUT nodes + 3 × 3 Kafka nodes) is large and expensive. Downscale `desiredCapacity` values if running smaller experiments.
 
-### 1.2 Install the Kubernetes Metrics Server
-
-EKS does not install the metrics server by default, which is needed for `kubectl top`:
-
-```sh
-kubectl delete -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
-```
-
-### 1.3 Create the Kafka storage class
+### 1.2 Create the Kafka storage class
 
 Theodolite's Kafka deployment uses persistent EBS volumes. Create the required storage class:
 
@@ -87,7 +78,7 @@ Theodolite's Kafka deployment uses persistent EBS volumes. Create the required s
 kubectl apply -f infrastructure/aws/kafka-storage-class.yaml
 ```
 
-### 1.4 Label SUT nodes for topology-aware scheduling
+### 1.3 Label SUT nodes for topology-aware scheduling
 
 BlobShuffle spreads pods across three simulated availability zones (labels `zone-1`, `zone-2`, `zone-3`). The `label-nodegroup-sizes.sh` script adds `nodegroup-size-N=true` labels that Theodolite uses to constrain pods to a specific number of nodes per zone.
 
@@ -328,7 +319,7 @@ Theodolite's Kafka deployment creates EBS volumes that are sometimes not fully c
 ```sh
 # List leftover EBS volumes belonging to the cluster
 aws ec2 describe-volumes \
-  --filters "Name=tag:kubernetes.io/cluster/<YOUR_CLUSTER_NAME>,Values=owned" \
+  --filters "Name=tag-key,Values=kubernetes.io/cluster/<YOUR_CLUSTER_NAME>" \
   --query "Volumes[*].{ID:VolumeId,Size:Size,State:State,Zone:AvailabilityZone,PVC:Tags[?Key=='kubernetes.io/created-for/pvc/name'].Value|[0]}" \
   --output table
 
