@@ -25,7 +25,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.dynatrace.research.blobshuffle.kstreams;
+package com.dynatrace.research.blobshuffle;
 
-public record NotificationDetails(String objectPath, int offsetStartInclusive, int offsetEndExclusive) {
+public record NotificationDestination(String destination, int partition) {
 }

@@ -1,0 +1,120 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/weaveworks/eksctl/main/pkg/apis/eksctl.io/v1alpha5/assets/schema.json
+
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: <YOUR_CLUSTER_NAME>  # e.g., blobshuffle-benchmark
+  region: us-east-1
+  version: "1.35"
+
+# Node groups:
+#   infra   - infrastructure (Kafka, Prometheus, Theodolite operator, load generator)
+#   sut-1/2/3 - system under test (BlobShuffle instances), one per simulated AZ
+#   kafka-1/2/3 - Kafka brokers, one per simulated AZ
+#
+# The sut nodegroups are labeled with type=sut and zone=zone-1/2/3 to enable
+# topology-spread scheduling.
+nodeGroups:
+  - name: infra
+    labels:
+      type: infra
+    instanceType: m6i.xlarge
+    availabilityZones: ['us-east-1a']
+    desiredCapacity: 12
+    iam:
+      withAddonPolicies:
+        ebs: true
+
+  - name: sut-1
+    labels:
+      type: sut
+      zone: zone-1
+    instanceType: r6in.xlarge
+    availabilityZones: ['us-east-1a']
+    desiredCapacity: 8
+
+  - name: sut-2
+    labels:
+      type: sut
+      zone: zone-2
+    instanceType: r6in.xlarge
+    availabilityZones: ['us-east-1a']
+    desiredCapacity: 8
+
+  - name: sut-3
+    labels:
+      type: sut
+      zone: zone-3
+    instanceType: r6in.xlarge
+    availabilityZones: ['us-east-1a']
+    desiredCapacity: 8
+
+  - name: kafka-1
+    labels:
+      type: kafka
+      zone: zone-1
+    instanceType: m6in.2xlarge
+    availabilityZones: ['us-east-1a']
+    desiredCapacity: 3
+    volumeSize: 80
+    iam:
+      withAddonPolicies:
+        ebs: true
+
+  - name: kafka-2
+    labels:
+      type: kafka
+      zone: zone-2
+    instanceType: m6in.2xlarge
+    availabilityZones: ['us-east-1a']
+    desiredCapacity: 3
+    volumeSize: 80
+    iam:
+      withAddonPolicies:
+        ebs: true
+
+  - name: kafka-3
+    labels:
+      type: kafka
+      zone: zone-3
+    instanceType: m6in.2xlarge
+    availabilityZones: ['us-east-1a']
+    desiredCapacity: 3
+    volumeSize: 80
+    iam:
+      withAddonPolicies:
+        ebs: true
+
+# Must specify at least 2 AZs; the second AZ is not actively used but required by EKS
+availabilityZones: ['us-east-1a', 'us-east-1b']
+
+addons:
+  - name: aws-ebs-csi-driver
+    configurationValues: |-
+      defaultStorageClass:
+        enabled: true
+      node:
+        legacyXFS: true
+  - name: aws-mountpoint-s3-csi-driver
+    # Replace with the ARN of the IAM role for the S3 CSI controller service account
+    serviceAccountRoleARN: arn:aws:iam::<AWS_ACCOUNT_ID>:role/<YOUR_CLUSTER_NAME>-s3-csi-controller-sa
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+    # Service account used by BlobShuffle pods to access S3
+    # The referenced policy must grant s3:GetObject, s3:PutObject, s3:DeleteObject
+    # on your benchmark S3 bucket
+    - metadata:
+        name: blobshuffle-s3
+      attachPolicyARNs:
+        - "arn:aws:iam::<AWS_ACCOUNT_ID>:policy/<YOUR_S3_POLICY_NAME>"
+    # Service account for the AWS Mountpoint S3 CSI driver (used by Theodolite for result storage)
+    - metadata:
+        name: s3-csi-driver-sa
+        namespace: kube-system
+      attachPolicyARNs:
+        - "arn:aws:iam::<AWS_ACCOUNT_ID>:policy/<YOUR_S3_CSI_POLICY_NAME>"
+      roleName: <YOUR_CLUSTER_NAME>-s3-csi-controller-sa
+      roleOnly: false

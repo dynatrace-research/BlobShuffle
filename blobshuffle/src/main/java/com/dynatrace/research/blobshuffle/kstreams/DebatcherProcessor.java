@@ -27,7 +27,10 @@
  */
 package com.dynatrace.research.blobshuffle.kstreams;
 
+import com.dynatrace.research.blobshuffle.AsyncResult;
 import com.dynatrace.research.blobshuffle.BatchReader;
+import com.dynatrace.research.blobshuffle.NotificationDestination;
+import com.dynatrace.research.blobshuffle.NotificationDetails;
 import com.dynatrace.research.blobshuffle.S3BatchFacade;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;

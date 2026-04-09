@@ -1,0 +1,12 @@
+strimzi:
+  kafka:
+    storage:
+      type: persistent-claim
+      size: 1000Gi
+      class: kafka
+      deleteClaim: true
+
+operator:
+  resultsVolume:
+    persistent:
+      enabled: true
