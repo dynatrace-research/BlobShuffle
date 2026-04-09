@@ -6,7 +6,7 @@ kind: ClusterConfig
 metadata:
   name: <YOUR_CLUSTER_NAME>  # e.g., blobshuffle-benchmark
   region: us-east-1
-  version: "1.32"
+  version: "1.35"
 
 # Node groups:
 #   infra   - infrastructure (Kafka, Prometheus, Theodolite operator, load generator)
