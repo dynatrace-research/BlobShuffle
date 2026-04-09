@@ -51,7 +51,7 @@ public class BlobShuffleConsumer<K, V> implements Closeable {
     private final KafkaConsumer<byte[], byte[]> notificationConsumer;
 
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
-    private final BlockingQueue<AsyncResult<BatchReader>> finishedAsyncCalls = new LinkedBlockingQueue<>();
+    private final BlockingQueue<AsyncResult<List<ConsumerRecord<K, V>>>> finishedAsyncCalls = new LinkedBlockingQueue<>();
     private int pendingEvents = 0;
 
     private final int maxInFlightReads;
@@ -224,10 +224,33 @@ public class BlobShuffleConsumer<K, V> implements Closeable {
                     long startTime = System.currentTimeMillis();
                     S3BatchFacade.SizeAwareInputStream batchInputStream =
                             s3BatchFacade.readPartialBatch(objectPath, offsetStart, offsetEnd);
-                    BatchReader batchReader = new BatchReader(batchInputStream, 0, batchInputStream.size());
+                    List<ConsumerRecord<K, V>> records = new ArrayList<>();
+                    try (BatchReader batchReader = new BatchReader(batchInputStream, 0, batchInputStream.size())) {
+                        while (batchReader.hasNextRecord()) {
+                            int partition = batchReader.readRecordPartition();
+                            byte[] keyBytes = batchReader.readRecordKey();
+                            K key = keyDeserializer.deserialize(DUMMY_TOPIC, keyBytes);
+                            byte[] valueBytes = batchReader.readRecordValue();
+                            V value = valueDeserializer.deserialize(DUMMY_TOPIC, valueBytes);
+                            long timestamp = batchReader.readRecordTimestamp();
+                            List<Header> headers = batchReader.readHeaders();
+                            records.add(new ConsumerRecord<>(
+                                    DUMMY_TOPIC,
+                                    partition,
+                                    -1L,
+                                    timestamp,
+                                    TimestampType.CREATE_TIME,
+                                    keyBytes != null ? keyBytes.length : 0,
+                                    valueBytes != null ? valueBytes.length : 0,
+                                    key,
+                                    value,
+                                    new RecordHeaders(headers),
+                                    Optional.empty()));
+                        }
+                    }
                     long timeMs = System.currentTimeMillis() - startTime;
                     LOGGER.info("Read batch from object {} in {} ms.", objectPath, timeMs);
-                    return AsyncResult.of(batchReader);
+                    return AsyncResult.of(records);
                 }, executorService)
                 .exceptionally(AsyncResult::ofFailed)
                 .whenComplete((batch, throwable) -> {
@@ -241,15 +264,14 @@ public class BlobShuffleConsumer<K, V> implements Closeable {
 
     private void collectAsyncResults(List<ConsumerRecord<K, V>> records) {
         while (!finishedAsyncCalls.isEmpty()) {
-            AsyncResult<BatchReader> asyncResult = finishedAsyncCalls.poll();
-            processAsyncResult(asyncResult, records);
+            processAsyncResult(finishedAsyncCalls.poll(), records);
         }
     }
 
     private void drainAsyncResults(List<ConsumerRecord<K, V>> records) {
         LOGGER.info("Block for {} pending results to be available.", pendingEvents);
         while (pendingEvents != 0) {
-            AsyncResult<BatchReader> asyncResult;
+            AsyncResult<List<ConsumerRecord<K, V>>> asyncResult;
             try {
                 asyncResult = finishedAsyncCalls.take();
             } catch (InterruptedException e) {
@@ -260,34 +282,11 @@ public class BlobShuffleConsumer<K, V> implements Closeable {
         }
     }
 
-    private void processAsyncResult(AsyncResult<BatchReader> asyncResult, List<ConsumerRecord<K, V>> records) {
+    private void processAsyncResult(AsyncResult<List<ConsumerRecord<K, V>>> asyncResult, List<ConsumerRecord<K, V>> records) {
         if (asyncResult.isFailed()) {
             throw new RuntimeException(asyncResult.getException());
         }
-        try (BatchReader batchReader = asyncResult.getResult()) {
-            pendingEvents--;
-            while (batchReader.hasNextRecord()) {
-                int partition = batchReader.readRecordPartition();
-                byte[] keyBytes = batchReader.readRecordKey();
-                K key = keyDeserializer.deserialize(DUMMY_TOPIC, keyBytes);
-                byte[] valueBytes = batchReader.readRecordValue();
-                V value = valueDeserializer.deserialize(DUMMY_TOPIC, valueBytes);
-                long timestamp = batchReader.readRecordTimestamp();
-                List<Header> headers = batchReader.readHeaders();
-
-                records.add(new ConsumerRecord<>(
-                        DUMMY_TOPIC,
-                        partition,
-                        -1L, // no meaningful offset from S3 batches
-                        timestamp,
-                        TimestampType.CREATE_TIME,
-                        keyBytes != null ? keyBytes.length : 0,
-                        valueBytes != null ? valueBytes.length : 0,
-                        key,
-                        value,
-                        new RecordHeaders(headers),
-                        Optional.empty()));
-            }
-        }
+        pendingEvents--;
+        records.addAll(asyncResult.getResult());
     }
 }
