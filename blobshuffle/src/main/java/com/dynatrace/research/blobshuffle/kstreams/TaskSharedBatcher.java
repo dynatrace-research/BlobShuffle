@@ -60,7 +60,7 @@ public class TaskSharedBatcher {
     // TODO Can be decreased if we incorporate the number of partitions per zone.
     public static final int MAX_PARTITION_SKEW = 8;
 
-    private static final int MAX_IN_FLIGHT_WRITES = 6;
+    private static final int MAX_IN_FLIGHT_WRITES = 54;
 
     private final S3BatchFacade s3BatchFacade;
 
@@ -92,7 +92,7 @@ public class TaskSharedBatcher {
         this.batchMaxDuration = batchMaxDuration;
 
         Timer throttleTimer = Timer.builder("batcher.throttle.time")
-                .description("time throttled in the batcher")
+                .description("time throttled waiting for a shared write slot")
                 .publishPercentiles(0.5, 0.95, 0.99, 0.999)
                 .publishPercentileHistogram()
                 .minimumExpectedValue(Duration.ofMillis(1))
