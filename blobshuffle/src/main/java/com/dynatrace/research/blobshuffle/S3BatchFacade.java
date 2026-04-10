@@ -37,7 +37,7 @@ import java.io.InputStream;
 public interface S3BatchFacade extends AutoCloseable {
 
     /**
-     * Writes a batch to the object storage service.
+     * Writes a batch to object storage.
      *
      * @param objectPath the object key in the storage bucket
      * @param batchInputStream the input stream containing the batch data
@@ -46,7 +46,7 @@ public interface S3BatchFacade extends AutoCloseable {
     void writeBatch(String objectPath, InputStream batchInputStream, int batchSizeInBytes);
 
     /**
-     * Reads a complete batch from the object storage service.
+     * Reads a complete batch from object storage.
      *
      * @param objectPath the object key in the storage bucket
      * @return an input stream wrapping the batch data with a known size
@@ -54,7 +54,7 @@ public interface S3BatchFacade extends AutoCloseable {
     SizeAwareInputStream readBatch(String objectPath);
 
     /**
-     * Reads a partial batch (sub-batch) from the object storage service.
+     * Reads a partial batch (sub-batch) from object storage.
      *
      * @param objectPath the object key in the storage bucket
      * @param offsetStart the start offset (inclusive) of the byte range to read

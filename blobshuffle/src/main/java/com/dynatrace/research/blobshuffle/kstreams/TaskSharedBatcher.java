@@ -42,11 +42,11 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * Accumulates records into per-zone batches and manages async S3 writes.
+ * Accumulates records into per-zone batches and manages async writes to object storage.
  *
  * <p>One instance is shared across all {@link BatcherProcessor} instances (i.e., all Kafka
- * Streams tasks) so that batches are filled across task boundaries, maximising S3 write
- * efficiency. Thread-safety of the shared state is deferred to a later refactoring.
+ * Streams tasks) so that batches are filled across task boundaries, maximizing write efficiency.
+ * Thread-safety of the shared state is deferred to a later refactoring.
  */
 public class TaskSharedBatcher {
 
@@ -131,7 +131,7 @@ public class TaskSharedBatcher {
     }
 
     /**
-     * Finalizes all non-empty batches and schedules async S3 writes for each.
+     * Finalizes all non-empty batches and schedules async writes to object storage for each.
      */
     public void finalizeBatch() {
         for (Map.Entry<String, BatchCollector> entry : batchCollectors.entrySet()) {
@@ -157,7 +157,7 @@ public class TaskSharedBatcher {
     }
 
     /**
-     * Blocks until all pending S3 writes have completed and processes their results.
+     * Blocks until all pending writes to object storage have completed and processes their results.
      *
      * @param notificationConsumer called for each completed {@link NotificationSet}
      */

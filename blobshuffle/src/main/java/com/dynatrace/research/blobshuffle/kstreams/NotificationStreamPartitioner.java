@@ -35,6 +35,11 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Routes notification records to the Kafka partition encoded in the
+ * {@link NotificationDestination} key, ensuring that each Debatcher task receives only
+ * batches intended for its own partition.
+ */
 public class NotificationStreamPartitioner implements StreamPartitioner<NotificationDestination, NotificationDetails> {
 
     @Override
