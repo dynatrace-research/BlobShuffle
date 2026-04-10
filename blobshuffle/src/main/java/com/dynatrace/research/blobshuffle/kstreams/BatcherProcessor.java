@@ -107,11 +107,11 @@ public class BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K, V
 
     @Override
     public void preCommit() {
-        LOGGER.info("Started commit process. Will finalize all batches.");
+        LOGGER.debug("Started commit process. Will finalize all batches.");
         taskSharedBatcher.finalizeBatch();
-        LOGGER.info("All batches have been scheduled for transfer to object storage. Now waiting for results.");
+        LOGGER.debug("All batches have been scheduled for transfer to object storage. Now waiting for results.");
         taskSharedBatcher.drainResults(this::forwardNotifications);
-        LOGGER.info("All results have been collected and notifications have been forwarded.");
+        LOGGER.debug("All results have been collected and notifications have been forwarded.");
     }
 
     private void forwardNotifications(NotificationSet notificationSet) {

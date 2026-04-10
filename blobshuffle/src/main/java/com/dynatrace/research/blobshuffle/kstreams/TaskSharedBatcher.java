@@ -125,7 +125,7 @@ public class TaskSharedBatcher {
     public void maybeFinalizeBatch() {
         if (batchCollectors.values().stream().anyMatch(batch -> batch.getSizeInBytes() >= batchDesiredBytes)
                 || System.currentTimeMillis() - lastCommitTimestamp > batchMaxDuration.toMillis()) {
-            LOGGER.info("Finalizing batch: max size or max duration reached.");
+            LOGGER.debug("Finalizing batch: max size or max duration reached.");
             finalizeBatch();
         }
     }
@@ -178,7 +178,7 @@ public class TaskSharedBatcher {
             long startTime = System.currentTimeMillis(); // Use monitoring framework?
             // Blocking call!
             s3BatchFacade.writeBatch(objectPath, batchInputStream, batchSizeInBytes);
-            LOGGER.info("Wrote batch of {} bytes to object {} in {} ms.", batchSizeInBytes, objectPath, System.currentTimeMillis() - startTime);
+            LOGGER.debug("Wrote batch of {} bytes to object {} in {} ms.", batchSizeInBytes, objectPath, System.currentTimeMillis() - startTime);
             return new NotificationSet(destination, objectPath, offsetRanges, batchTimestamp);
         });
     }
