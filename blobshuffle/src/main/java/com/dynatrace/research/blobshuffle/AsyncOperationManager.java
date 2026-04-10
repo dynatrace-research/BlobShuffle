@@ -25,8 +25,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package com.dynatrace.research.blobshuffle.kstreams;
+package com.dynatrace.research.blobshuffle;
 
+import com.dynatrace.research.blobshuffle.kstreams.BatcherProcessor;
+import com.dynatrace.research.blobshuffle.kstreams.DebatcherProcessor;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,6 +122,8 @@ public class AsyncOperationManager<T> {
         LOGGER.info("Blocking for {} pending async results.", pendingCount);
         while (pendingCount > 0) {
             try {
+                // Process one result in each iteration
+                // Block if necessary
                 processOne(finishedResults.take(), resultConsumer);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -130,6 +134,7 @@ public class AsyncOperationManager<T> {
 
     private void processOne(AsyncResult<T> asyncResult, Consumer<T> resultConsumer) {
         if (asyncResult.isFailed()) {
+            // TODO Make custom exception
             throw new RuntimeException(asyncResult.getException());
         }
         pendingCount--;

@@ -27,11 +27,7 @@
  */
 package com.dynatrace.research.blobshuffle.kstreams;
 
-import com.dynatrace.research.blobshuffle.AsyncResult;
-import com.dynatrace.research.blobshuffle.BatchCollector;
-import com.dynatrace.research.blobshuffle.ObjectIdSupplier;
-import com.dynatrace.research.blobshuffle.OutputPartitioner;
-import com.dynatrace.research.blobshuffle.S3BatchFacade;
+import com.dynatrace.research.blobshuffle.*;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -113,8 +109,10 @@ public class TaskSharedBatcher {
      * per-zone {@link BatchCollector} based on the record key.
      */
     public void addRecord(byte[] recordKey, byte[] recordValue, long recordTimestamp, Headers recordHeaders) {
+        // Compute destination partition
         int destinationPartition = outputPartitioner.getPartitionForRecordKey(recordKey);
         String destinationZone = outputPartitioner.getRackForPartition(destinationPartition);
+
         BatchCollector batchCollector = batchCollectors.computeIfAbsent(
                 destinationZone,
                 d -> new BatchCollector((int) (MAX_PARTITION_SKEW * batchDesiredBytes / outputPartitioner.getNumberOfPartitions())));
@@ -140,6 +138,7 @@ public class TaskSharedBatcher {
             String destination = entry.getKey();
             BatchCollector batch = entry.getValue();
             if (batch.getSizeInBytes() == 0) {
+                // Empty batch: Do not publish
                 continue;
             }
             writeBatchAsync(destination, batch);
@@ -176,7 +175,8 @@ public class TaskSharedBatcher {
         batchSizeSummary.record(batchSizeInBytes);
 
         asyncOps.submitAsync(() -> {
-            long startTime = System.currentTimeMillis();
+            long startTime = System.currentTimeMillis(); // Use monitoring framework?
+            // Blocking call!
             s3BatchFacade.writeBatch(objectPath, batchInputStream, batchSizeInBytes);
             LOGGER.info("Wrote batch of {} bytes to object {} in {} ms.", batchSizeInBytes, objectPath, System.currentTimeMillis() - startTime);
             return new NotificationSet(destination, objectPath, offsetRanges, batchTimestamp);
