@@ -27,6 +27,8 @@
  */
 package com.dynatrace.research.blobshuffle;
 
+import com.dynatrace.research.blobshuffle.kstreams.NotificationStreamPartitioner;
+
 /**
  * Identifies the intended recipient of a batch notification.
  * Used as the Kafka record key on the notification topic so that
