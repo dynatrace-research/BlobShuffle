@@ -97,20 +97,20 @@ public class DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<No
 
     @Override
     public void preCommit() { // TODO maybe protected
-        LOGGER.info("Start commit process. Wait for all pending S3 fetches.");
+        LOGGER.debug("Start commit process. Wait for all pending S3 fetches.");
         asyncOps.drainResults(this::forwardBatchRecords); // Might block if the results to be collected
-        LOGGER.info("All results have been collected and output records have been forwarded.");
+        LOGGER.debug("All results have been collected and output records have been forwarded.");
     }
 
     private void readBatchAsync(String objectPath, int offsetStart, int offsetEnd) {
-        LOGGER.info("Start async fetching batch from object {} for offset range {}:{}.", objectPath, offsetStart, offsetEnd);
+        LOGGER.debug("Start async fetching batch from object {} for offset range {}:{}.", objectPath, offsetStart, offsetEnd);
         inFlightGauge.incrementAndGet();
         asyncOps.submitAsync(() -> {
             long startTime = System.currentTimeMillis();  // Use monitoring framework?
             // Blocking call!
             S3BatchFacade.SizeAwareInputStream batchInputStream = s3BatchFacade.readPartialBatch(objectPath, offsetStart, offsetEnd);
             BatchReader batchReader = new BatchReader(batchInputStream, 0, batchInputStream.size());
-            LOGGER.info("Read batch from object {} in {} ms.", objectPath, System.currentTimeMillis() - startTime);
+            LOGGER.debug("Read batch from object {} in {} ms.", objectPath, System.currentTimeMillis() - startTime);
             inFlightGauge.decrementAndGet();
             return batchReader;
         });

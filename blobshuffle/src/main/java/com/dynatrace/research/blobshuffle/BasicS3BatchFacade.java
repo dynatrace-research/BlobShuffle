@@ -103,12 +103,12 @@ public class BasicS3BatchFacade implements S3BatchFacade {
             throw new RuntimeException(e);
         }
         // String eTag = response.eTag(); // Could be used as integrity check
-        LOGGER.info("Wrote batch of {} bytes to object {}.", batchSizeInBytes, objectPath);
+        LOGGER.debug("Wrote batch of {} bytes to object {}.", batchSizeInBytes, objectPath);
     }
 
     @Override
     public SizeAwareInputStream readBatch(String objectPath) {
-        LOGGER.info("Fetch batch from object {}.", objectPath);
+        LOGGER.debug("Fetch batch from object {}.", objectPath);
         ResponseInputStream<GetObjectResponse> batchInputStream = this.getsTimer.record(() ->
                 s3Client.getObject(request ->
                         request

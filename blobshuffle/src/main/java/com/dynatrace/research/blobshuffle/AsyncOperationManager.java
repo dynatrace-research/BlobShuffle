@@ -92,7 +92,7 @@ public class AsyncOperationManager<T> {
      * @throws RuntimeException wrapping the original exception if any operation failed
      */
     public void drainResults(Consumer<T> resultConsumer) {
-        LOGGER.info("Blocking for {} pending async results.", pendingCount);
+        LOGGER.debug("Blocking for {} pending async results.", pendingCount);
         while (pendingCount > 0) {
             try {
                 // Process one result in each iteration
