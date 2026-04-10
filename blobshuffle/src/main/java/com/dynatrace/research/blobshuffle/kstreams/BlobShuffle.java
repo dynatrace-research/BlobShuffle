@@ -402,11 +402,11 @@ public class BlobShuffle<K,V> implements Closeable {
     }
 
 
-    @Override
     /**
      * Closes underlying resources including the rack-assignment refresher,
      * admin client, and the S3 batch facade.
      */
+    @Override
     public void close() {
         this.rackAssignmentRefresher.close();
         this.adminClient.close();

@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+/**
+ * An {@link InputStream} decorator that forwards all operations to a wrapped delegate.
+ * Extend this class to override only the relevant methods.
+ */
 public class DelegatingInputStream extends InputStream {
 
     private final InputStream delegate;

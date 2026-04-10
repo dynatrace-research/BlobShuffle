@@ -21,6 +21,13 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Experimental distributed caching implementation using Infinispan's replicated
+ * distributed cache for cross-instance object sharing within an availability zone.
+ *
+ * @deprecated Replaced by {@link ProxyingS3BatchFacade} + {@link CachingS3BatchFacade},
+ *             which uses a lightweight in-process HTTP proxy instead of Infinispan.
+ */
 // implements S3BatchFacade
 @Deprecated
 public class InfinispanDistributedCachingS3BatchFacade {

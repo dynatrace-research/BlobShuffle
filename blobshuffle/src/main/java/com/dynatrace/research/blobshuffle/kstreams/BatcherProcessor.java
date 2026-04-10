@@ -14,6 +14,20 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Consumer;
 
+/**
+ * Kafka Streams processor that collects incoming records into batches for object storage.
+ *
+ * <p>On each {@link #process} call the record is handed to the shared {@link TaskSharedBatcher}.
+ * When a size or time threshold is exceeded the batcher finalises the current batch and writes
+ * it to object storage asynchronously. Notifications for each output partition are forwarded downstream
+ * as Kafka records on the notification topic.
+ *
+ * <p>Before every Kafka Streams commit ({@link #preCommit}) all pending batches are flushed
+ * and all in-flight writes are drained to ensure exactly-once semantics.
+ *
+ * @param <K> the input record key type
+ * @param <V> the input record value type
+ */
 public class BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K, V, NotificationDestination, NotificationDetails> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BatcherProcessor.class);
@@ -68,7 +82,7 @@ public class BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K, V
     public void preCommit() {
         LOGGER.info("Started commit process. Will finalize all batches.");
         taskSharedBatcher.finalizeBatch();
-        LOGGER.info("All batches have been scheduled for transfer to S3. Now waiting for results.");
+        LOGGER.info("All batches have been scheduled for transfer to object storage. Now waiting for results.");
         taskSharedBatcher.drainResults(this::forwardNotifications);
         LOGGER.info("All results have been collected and notifications have been forwarded.");
     }
@@ -79,6 +93,12 @@ public class BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K, V
         }
     }
 
+    /**
+     * {@link ProcessorSupplier} for {@link BatcherProcessor}.
+     *
+     * @param <K> the input record key type
+     * @param <V> the input record value type
+     */
     public static class Supplier<K, V> extends AbstractCommitListenerProcessorSupplier<K, V, NotificationDestination, NotificationDetails> {
 
         private final Serde<K> keySerde;

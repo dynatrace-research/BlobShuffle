@@ -8,12 +8,23 @@ import org.apache.kafka.streams.state.KeyValueStore;
 import org.apache.kafka.streams.state.Stores;
 import org.apache.kafka.streams.state.internals.AbstractStoreBuilder;
 
+/**
+ * {@link org.apache.kafka.streams.state.StoreBuilder} that creates a {@link FlushListenerStore}.
+ * The store is backed by an in-memory key-value store but delegates flush events to
+ * the provided {@link ProcessorFlushStoreRegistry}.
+ */
 public class FlushListenerStoreBuilder extends AbstractStoreBuilder<Bytes, byte[], KeyValueStore<Bytes, byte[]>> {
 
     private final KeyValueBytesStoreSupplier storeSupplier;
 
     private final ProcessorFlushStoreRegistry processorFlushStoreRegistry;
 
+    /**
+     * Creates a new builder.
+     *
+     * @param flushStoreRegistry the registry that receives flush callbacks
+     * @param name               the store name (must be unique within the topology)
+     */
     public FlushListenerStoreBuilder(ProcessorFlushStoreRegistry flushStoreRegistry, String name) {
         super(name, Serdes.Bytes(), Serdes.ByteArray(), Time.SYSTEM); // Most never used
         this.storeSupplier = Stores.inMemoryKeyValueStore(name);

@@ -12,6 +12,14 @@ import org.apache.kafka.streams.state.internals.WrappedStateStore;
 
 import java.util.List;
 
+/**
+ * A dummy Kafka Streams key-value state store whose sole purpose is to intercept
+ * {@link #flushCache()} calls from the Kafka Streams commit machinery and forward
+ * them to the {@link ProcessorFlushStoreRegistry}.
+ *
+ * <p>All key-value operations throw {@link UnsupportedOperationException} because
+ * no actual data is stored here.
+ */
 public class FlushListenerStore
         extends WrappedStateStore<KeyValueStore<Bytes, byte[]>, byte[], byte[]>
         implements KeyValueStore<Bytes, byte[]>, CachedStateStore<byte[], byte[]> {

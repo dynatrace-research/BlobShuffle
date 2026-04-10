@@ -202,6 +202,12 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
         this.memberDiscoverer.close();
     }
 
+    /**
+     * {@link MemberDiscoverer} backed by a JGroups cluster channel
+     * (configured via {@code jgroups-kubernetes.xml}). Each member advertises its
+     * {@code host:port} as the JGroups node name so that consistent-hash routing can
+     * resolve HTTP addresses directly.
+     */
     private static class JGroupsMemberDiscoverer implements MemberDiscoverer {
 
         private final JChannel channel;

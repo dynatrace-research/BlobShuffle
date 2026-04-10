@@ -7,6 +7,10 @@ import org.apache.kafka.common.serialization.Serializer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Kafka {@link Serde} for {@link NotificationDestination}, encoding the destination
+ * zone and partition number as a compact binary format.
+ */
 public class NotificationDestinationSerde implements Serde<NotificationDestination> {
 
     @Override
@@ -19,6 +23,7 @@ public class NotificationDestinationSerde implements Serde<NotificationDestinati
         return new NotificationDestinationDeserializer();
     }
 
+    /** Serializes a {@link NotificationDestination} to bytes. */
     public static class NotificationDestinationSerializer implements Serializer<NotificationDestination> {
 
         @Override
@@ -34,6 +39,7 @@ public class NotificationDestinationSerde implements Serde<NotificationDestinati
 
     }
 
+    /** Deserializes a {@link NotificationDestination} from bytes. */
     public static class NotificationDestinationDeserializer implements Deserializer<NotificationDestination> {
 
         @Override

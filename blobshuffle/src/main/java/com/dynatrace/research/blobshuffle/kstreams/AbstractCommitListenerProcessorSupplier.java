@@ -8,6 +8,16 @@ import org.apache.kafka.streams.state.StoreBuilder;
 
 import java.util.Set;
 
+/**
+ * Base {@link ProcessorSupplier} that wires up a shared {@link ProcessorFlushStoreRegistry}
+ * and registers a {@link FlushListenerStore} so that Kafka Streams invokes each processor's
+ * pre-commit hook at the right moment.
+ *
+ * @param <KIn>  the input key type
+ * @param <VIn>  the input value type
+ * @param <KOut> the output key type
+ * @param <VOut> the output value type
+ */
 public abstract class AbstractCommitListenerProcessorSupplier<KIn, VIn, KOut, VOut> implements ProcessorSupplier<KIn, VIn, KOut, VOut> {
 
     private final ProcessorFlushStoreRegistry processorFlushStoreRegistry = new ProcessorFlushStoreRegistry();

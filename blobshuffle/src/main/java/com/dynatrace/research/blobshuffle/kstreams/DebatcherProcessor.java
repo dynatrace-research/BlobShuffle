@@ -17,6 +17,18 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Kafka Streams processor that reads batches from object storage and re-emits the contained records.
+ *
+ * <p>Each incoming notification ({@link NotificationDetails}) identifies an object and a
+ * byte range to fetch. The fetch is issued asynchronously; previously completed results are
+ * drained on every {@link #process} call. Before every Kafka Streams commit ({@link #preCommit})
+ * all in-flight reads are drained so that all records are forwarded before the offsets are
+ * committed.
+ *
+ * @param <K> the output record key type
+ * @param <V> the output record value type
+ */
 public class DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<NotificationDestination, NotificationDetails, K, V> {
 
     private static final String DUMMY_TOPIC = "";
@@ -123,6 +135,12 @@ public class DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<No
         }
     }
 
+    /**
+     * {@link ProcessorSupplier} for {@link DebatcherProcessor}.
+     *
+     * @param <K> the output record key type
+     * @param <V> the output record value type
+     */
     public static class Supplier<K, V> extends AbstractCommitListenerProcessorSupplier<NotificationDestination, NotificationDetails, K, V> {
 
         private final S3BatchFacade s3BatchFacade;
