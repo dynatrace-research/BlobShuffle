@@ -97,7 +97,7 @@ public class BlobShuffle<K,V> implements Closeable {
 
     private final MeterRegistry meterRegistry;
 
-    private final TaskSharedBatcher taskSharedBatcher = new TaskSharedBatcher(); // TODO Has to be per thread
+    private final TaskSharedBatcher taskSharedBatcher;
 
     /**
      * Creates a new BlobShuffle with the default partitioner ({@link Partitioner#KAFKA_BUILTIN})
@@ -290,6 +290,12 @@ public class BlobShuffle<K,V> implements Closeable {
             this.rackAssignmentRefresher = Refresher.NOOP;
         }
         this.meterRegistry = meterRegistry;
+        this.taskSharedBatcher = new TaskSharedBatcher(
+                this.s3BatchFacade,
+                this.outputPartitioner,
+                this.batchDesiredBytes,
+                this.batchMaxDuration,
+                this.meterRegistry);
     }
 
     /**
@@ -299,15 +305,10 @@ public class BlobShuffle<K,V> implements Closeable {
      */
     public ProcessorSupplier<K, V, NotificationDestination, NotificationDetails> batcherSupplier() {
         return new BatcherProcessor.Supplier<>(
-                s3BatchFacade,
-                outputPartitioner,
                 keySerde,
                 valueSerde,
-                batchDesiredBytes,
-                batchMaxDuration,
                 taskSharedBatcher,
-                this::handleProcessorInit,
-                meterRegistry);
+                this::handleProcessorInit);
     }
 
     /**
