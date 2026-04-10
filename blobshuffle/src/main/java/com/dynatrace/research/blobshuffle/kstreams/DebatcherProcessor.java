@@ -1,10 +1,6 @@
 package com.dynatrace.research.blobshuffle.kstreams;
 
-import com.dynatrace.research.blobshuffle.AsyncResult;
-import com.dynatrace.research.blobshuffle.BatchReader;
-import com.dynatrace.research.blobshuffle.NotificationDestination;
-import com.dynatrace.research.blobshuffle.NotificationDetails;
-import com.dynatrace.research.blobshuffle.S3BatchFacade;
+import com.dynatrace.research.blobshuffle.*;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -71,6 +67,7 @@ public class DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<No
 
     @Override
     public void process(Record<NotificationDestination, NotificationDetails> notification) {
+        // Before processing the new record, we first collect the results of all async calls that have finished in the meantime
         asyncOps.collectResults(this::forwardBatchRecords);
 
         String objectPath = notification.value().objectPath();
@@ -82,12 +79,14 @@ public class DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<No
     @Override
     public void close() {
         super.close();
+        keySerde.close();
+        valueSerde.close();
     }
 
     @Override
-    public void preCommit() {
+    public void preCommit() { // TODO maybe protected
         LOGGER.info("Start commit process. Wait for all pending S3 fetches.");
-        asyncOps.drainResults(this::forwardBatchRecords);
+        asyncOps.drainResults(this::forwardBatchRecords); // Might block if the results to be collected
         LOGGER.info("All results have been collected and output records have been forwarded.");
     }
 
@@ -95,7 +94,8 @@ public class DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<No
         LOGGER.info("Start async fetching batch from object {} for offset range {}:{}.", objectPath, offsetStart, offsetEnd);
         inFlightGauge.incrementAndGet();
         asyncOps.submitAsync(() -> {
-            long startTime = System.currentTimeMillis();
+            long startTime = System.currentTimeMillis();  // Use monitoring framework?
+            // Blocking call!
             S3BatchFacade.SizeAwareInputStream batchInputStream = s3BatchFacade.readPartialBatch(objectPath, offsetStart, offsetEnd);
             BatchReader batchReader = new BatchReader(batchInputStream, 0, batchInputStream.size());
             LOGGER.info("Read batch from object {} in {} ms.", objectPath, System.currentTimeMillis() - startTime);

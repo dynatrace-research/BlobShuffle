@@ -60,6 +60,8 @@ public class BatcherProcessor<K, V> extends AbstractCommitListenerProcessor<K, V
     @Override
     public void close() {
         super.close();
+        keySerde.close();
+        valueSerde.close();
     }
 
     @Override
