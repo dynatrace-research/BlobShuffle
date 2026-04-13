@@ -7,6 +7,10 @@ import org.apache.kafka.common.serialization.Serializer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Kafka {@link Serde} for {@link NotificationDetails}, encoding the object path, start
+ * offset, and end offset as a compact binary format.
+ */
 public class NotificationDetailsSerde implements Serde<NotificationDetails> {
 
     @Override
@@ -19,6 +23,7 @@ public class NotificationDetailsSerde implements Serde<NotificationDetails> {
         return new NotificationDetailsDeserializer();
     }
 
+    /** Serializes a {@link NotificationDetails} to bytes. */
     public static class NotificationDetailsSerializer implements Serializer<NotificationDetails> {
 
         @Override
@@ -36,6 +41,7 @@ public class NotificationDetailsSerde implements Serde<NotificationDetails> {
 
     }
 
+    /** Deserializes a {@link NotificationDetails} from bytes. */
     public static class NotificationDetailsDeserializer implements Deserializer<NotificationDetails> {
 
         @Override

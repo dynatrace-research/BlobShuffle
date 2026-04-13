@@ -123,7 +123,7 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
         if (objectOwner.equals(this.memberDiscoverer.getThisMember())) {
             this.wrapped.writeBatch(objectPath, batchInputStream, batchSizeInBytes);
         } else {
-            LOGGER.info("Forward write request for object '{}' to '{}'", objectPath, objectOwner);
+            LOGGER.debug("Forward write request for object '{}' to '{}'", objectPath, objectOwner);
             this.forwardWriteBatch(objectPath, batchInputStream, batchSizeInBytes, objectOwner);
         }
     }
@@ -153,7 +153,7 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
         if (objectOwner.equals(this.memberDiscoverer.getThisMember())) {
             return this.wrapped.readBatch(objectPath);
         } else {
-            LOGGER.info("Forward read request for object '{}' to '{}'", objectPath, objectOwner);
+            LOGGER.debug("Forward read request for object '{}' to '{}'", objectPath, objectOwner);
             return forwardReadBatch(objectPath, objectOwner);
         }
     }
@@ -164,7 +164,7 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
         if (objectOwner.equals(this.memberDiscoverer.getThisMember())) {
             return this.wrapped.readPartialBatch(objectPath, offsetStart, offsetEnd);
         } else {
-            LOGGER.info("Forward partial read request for object '{}' to '{}'", objectPath, objectOwner);
+            LOGGER.debug("Forward partial read request for object '{}' to '{}'", objectPath, objectOwner);
             return forwardReadBatch(objectPath, objectOwner, offsetStart, offsetEnd);
         }
     }
@@ -202,6 +202,12 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
         this.memberDiscoverer.close();
     }
 
+    /**
+     * {@link MemberDiscoverer} backed by a JGroups cluster channel
+     * (configured via {@code jgroups-kubernetes.xml}). Each member advertises its
+     * {@code host:port} as the JGroups node name so that consistent-hash routing can
+     * resolve HTTP addresses directly.
+     */
     private static class JGroupsMemberDiscoverer implements MemberDiscoverer {
 
         private final JChannel channel;

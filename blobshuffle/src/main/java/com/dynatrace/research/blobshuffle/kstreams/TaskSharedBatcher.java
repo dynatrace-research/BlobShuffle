@@ -1,67 +1,158 @@
 package com.dynatrace.research.blobshuffle.kstreams;
 
-import com.dynatrace.research.blobshuffle.AsyncResult;
-import com.dynatrace.research.blobshuffle.BatchCollector;
+import com.dynatrace.research.blobshuffle.*;
+import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import org.apache.kafka.common.header.Headers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Consumer;
 
-// Configuration for batching to be used by different tasks, but not only from the same StreamsThread!
-// TODO Move methods from processor here, but wait to see what async stuff should be reused in debatcher
+/**
+ * Accumulates records into per-zone batches and manages async writes to object storage.
+ *
+ * <p>One instance is shared across all {@link BatcherProcessor} instances (i.e., all Kafka
+ * Streams tasks) so that batches are filled across task boundaries, maximizing write efficiency.
+ * Thread-safety of the shared state is deferred to a later refactoring.
+ */
 public class TaskSharedBatcher {
 
-    private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
-    //private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TaskSharedBatcher.class);
+
+    // Max. tolerable difference in load on a partition vs. the avg. across partitions.
+    // TODO Can be decreased if we incorporate the number of partitions per zone.
+    public static final int MAX_PARTITION_SKEW = 8;
+
+    private static final int MAX_IN_FLIGHT_WRITES = 54;
+
+    private final S3BatchFacade s3BatchFacade;
+
+    private final OutputPartitioner outputPartitioner;
+
+    private final long batchDesiredBytes;
+
+    private final Duration batchMaxDuration;
+
+    private final ObjectIdSupplier objectIdSupplier = new ObjectIdSupplier();
+
+    private final DistributionSummary batchSizeSummary;
+
+    private final AsyncOperationManager<NotificationSet> asyncOps;
 
     private final Map<String, BatchCollector> batchCollectors = new HashMap<>();
 
-    private final BlockingQueue<AsyncResult<NotificationSet>> finishedAsyncCalls = new LinkedBlockingQueue<>();
-
-    private final Map<String, Object> pendingEvents = new HashMap<>();
-
-    private int pendingEventsC = 0;
-
     private long lastCommitTimestamp = System.currentTimeMillis();
 
-    public TaskSharedBatcher() {}
+    public TaskSharedBatcher(
+            S3BatchFacade s3BatchFacade,
+            OutputPartitioner outputPartitioner,
+            long batchDesiredBytes,
+            Duration batchMaxDuration,
+            MeterRegistry meterRegistry) {
+        this.s3BatchFacade = s3BatchFacade;
+        this.outputPartitioner = outputPartitioner;
+        this.batchDesiredBytes = batchDesiredBytes;
+        this.batchMaxDuration = batchMaxDuration;
 
-    public BlockingQueue<AsyncResult<NotificationSet>> getFinishedAsyncCalls() {
-        return finishedAsyncCalls;
+        Timer throttleTimer = Timer.builder("batcher.throttle.time")
+                .description("time throttled waiting for a shared write slot")
+                .publishPercentiles(0.5, 0.95, 0.99, 0.999)
+                .publishPercentileHistogram()
+                .minimumExpectedValue(Duration.ofMillis(1))
+                .maximumExpectedValue(Duration.ofSeconds(60))
+                .register(meterRegistry);
+        this.asyncOps = new AsyncOperationManager<>(MAX_IN_FLIGHT_WRITES, throttleTimer);
+
+        this.batchSizeSummary = DistributionSummary
+                .builder("batch.size")
+                .baseUnit("bytes")
+                .minimumExpectedValue((double) 1024 * 1024)
+                .maximumExpectedValue((double) 1024 * 1024 * 1024)
+                .register(meterRegistry);
     }
 
-    public ExecutorService getExecutorService() {
-        return executorService;
+    /**
+     * Serializes the record using the provided key/value bytes and routes it to the correct
+     * per-zone {@link BatchCollector} based on the record key.
+     */
+    public void addRecord(byte[] recordKey, byte[] recordValue, long recordTimestamp, Headers recordHeaders) {
+        // Compute destination partition
+        int destinationPartition = outputPartitioner.getPartitionForRecordKey(recordKey);
+        String destinationZone = outputPartitioner.getRackForPartition(destinationPartition);
+
+        BatchCollector batchCollector = batchCollectors.computeIfAbsent(
+                destinationZone,
+                d -> new BatchCollector((int) (MAX_PARTITION_SKEW * batchDesiredBytes / outputPartitioner.getNumberOfPartitions())));
+        batchCollector.addRecord(destinationPartition, recordKey, recordValue, recordTimestamp, recordHeaders);
     }
 
-    public Map<String, BatchCollector> getBatchCollectors() {
-        return batchCollectors;
+    /**
+     * Finalizes the current batch if the size or time threshold has been reached.
+     */
+    public void maybeFinalizeBatch() {
+        if (batchCollectors.values().stream().anyMatch(batch -> batch.getSizeInBytes() >= batchDesiredBytes)
+                || System.currentTimeMillis() - lastCommitTimestamp > batchMaxDuration.toMillis()) {
+            LOGGER.debug("Finalizing batch: max size or max duration reached.");
+            finalizeBatch();
+        }
     }
 
-    public Map<String, Object> getPendingEvents() {
-        return pendingEvents;
+    /**
+     * Finalizes all non-empty batches and schedules async writes to object storage for each.
+     */
+    public void finalizeBatch() {
+        for (Map.Entry<String, BatchCollector> entry : batchCollectors.entrySet()) {
+            String destination = entry.getKey();
+            BatchCollector batch = entry.getValue();
+            if (batch.getSizeInBytes() == 0) {
+                // Empty batch: Do not publish
+                continue;
+            }
+            writeBatchAsync(destination, batch);
+        }
+        batchCollectors.clear();
+        lastCommitTimestamp = System.currentTimeMillis();
     }
 
-    public int getPendingEventsC() {
-        return pendingEventsC;
+    /**
+     * Processes all results that have finished without blocking.
+     *
+     * @param notificationConsumer called for each completed {@link NotificationSet}
+     */
+    public void collectResults(Consumer<NotificationSet> notificationConsumer) {
+        asyncOps.collectResults(notificationConsumer);
     }
 
-    public void incPendingEventsC() {
-        pendingEventsC++;
+    /**
+     * Blocks until all pending writes to object storage have completed and processes their results.
+     *
+     * @param notificationConsumer called for each completed {@link NotificationSet}
+     */
+    public void drainResults(Consumer<NotificationSet> notificationConsumer) {
+        asyncOps.drainResults(notificationConsumer);
     }
 
-    public void decPendingEventsC() {
-        pendingEventsC--;
-    }
+    private void writeBatchAsync(String destination, BatchCollector batch) {
+        Map<Integer, BatchCollector.OffsetRange> offsetRanges = batch.getOffsetRangeForAllPartition();
+        long batchTimestamp = batch.getHighestTimestamp();
+        int batchSizeInBytes = batch.getSizeInBytes();
+        InputStream batchInputStream = batch.getAsInputStream(); // locks the batch; no other methods allowed after this
+        String objectPath = destination + "/" + objectIdSupplier.get();
 
-    public long getLastCommitTimestamp() {
-        return lastCommitTimestamp;
-    }
+        batchSizeSummary.record(batchSizeInBytes);
 
-    public void setLastCommitTimestamp(long lastCommitTimestamp) {
-        this.lastCommitTimestamp = lastCommitTimestamp;
+        asyncOps.submitAsync(() -> {
+            long startTime = System.currentTimeMillis(); // Use monitoring framework?
+            // Blocking call!
+            s3BatchFacade.writeBatch(objectPath, batchInputStream, batchSizeInBytes);
+            LOGGER.debug("Wrote batch of {} bytes to object {} in {} ms.", batchSizeInBytes, objectPath, System.currentTimeMillis() - startTime);
+            return new NotificationSet(destination, objectPath, offsetRanges, batchTimestamp);
+        });
     }
 }
