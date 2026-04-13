@@ -75,7 +75,7 @@ class StandaloneBlobShuffleE2ETest {
 
             // --- Phase 1: Produce records ---
             List<List<Byte>> producedKeys = new ArrayList<>();
-            try (BlobShuffleProducer<byte[], byte[]> producer = new BlobShuffleProducer<>(
+            try (BlobShuffleProducer<byte[], byte[]> producer = new BlobShuffleProducerImpl<>(
                     s3BatchFacade,
                     outputPartitioner,
                     new ByteArraySerializer(),
@@ -103,7 +103,7 @@ class StandaloneBlobShuffleE2ETest {
             List<List<Byte>> consumedKeys = new ArrayList<>();
             Properties consumerProps = new Properties();
             consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-            try (BlobShuffleConsumer<byte[], byte[]> consumer = new BlobShuffleConsumer<>(
+            try (BlobShuffleConsumer<byte[], byte[]> consumer = new BlobShuffleConsumerImpl<>(
                     s3BatchFacade,
                     new ByteArrayDeserializer(),
                     new ByteArrayDeserializer(),
@@ -176,7 +176,7 @@ class StandaloneBlobShuffleE2ETest {
             Thread consumerThread = Thread.ofVirtual().start(() -> {
                 Properties consumerProps = new Properties();
                 consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-                try (BlobShuffleConsumer<byte[], byte[]> consumer = new BlobShuffleConsumer<>(
+                try (BlobShuffleConsumer<byte[], byte[]> consumer = new BlobShuffleConsumerImpl<>(
                         s3BatchFacade,
                         new ByteArrayDeserializer(),
                         new ByteArrayDeserializer(),
@@ -204,7 +204,7 @@ class StandaloneBlobShuffleE2ETest {
             // Producer runs on the test thread for produceDurationSeconds.
             Random random = new Random(42);
             long deadline = System.currentTimeMillis() + produceDurationSeconds * 1000L;
-            try (BlobShuffleProducer<byte[], byte[]> producer = new BlobShuffleProducer<>(
+            try (BlobShuffleProducer<byte[], byte[]> producer = new BlobShuffleProducerImpl<>(
                     s3BatchFacade,
                     outputPartitioner,
                     new ByteArraySerializer(),
