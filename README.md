@@ -53,7 +53,7 @@ BlobShuffle consists of two main operators—**Batcher** and **Debatcher**—tha
 
 All access to object storage is routed through a multi-layered caching mechanism:
 
-- **Distributed cache:** Per-AZ in-memory LRU cache shared across stream processing instances. Ensures each batch is downloaded from object storage at most once per AZ (unless the cache entry has expired).
+- **Distributed cache:** Per-AZ in-memory LRU cache shared across stream processing instances. Ensures each batch is downloaded from object storage at most once per AZ (unless the cache entry has been evicted).
 - **Local cache** (optional): Per-instance in-memory LRU cache that avoids repeated lookups to the distributed cache for batches accessed by multiple operators on the same instance.
 
 
@@ -94,7 +94,7 @@ builder.stream("input-topic")
 
 ### Prerequisites
 
-- **Java 24** or later (the project uses a Java 24 toolchain)
+- **Java 25** or later (the project uses a Java 25 toolchain)
 - **Apache Kafka 3.9+** (broker and client)
 - **Amazon S3** or an S3-compatible object storage service
 - **AWS credentials** configured (e.g., via environment variables, IAM roles, or the default credential provider chain)
@@ -131,6 +131,7 @@ The project uses Gradle with the included wrapper:
 | `batchMaxDuration` | `Duration` | Maximum time before a batch is finalized, regardless of size. Bounds worst-case latency. |
 | `repartitionName` | `String` | Name for the internal Kafka repartitioning topic used for notifications. |
 | `partitioner` | `Partitioner` | *(Optional)* Partitioning strategy. Defaults to `Partitioner.KAFKA_BUILTIN`. |
+| `staticOutputPartitionsToRacks` | `Map<Integer, String>` | *(Optional)* Static mapping of output partition numbers to rack IDs. Use when rack assignments are known upfront and dynamic refresh is not needed. |
 | `kafkaRackAssignmentRefreshInterval` | `Duration` | Interval for refreshing the partition-to-rack mapping from Kafka. Set to `Duration.ZERO` to disable. |
 | `meterRegistry` | `MeterRegistry` | *(Optional)* Micrometer registry for metrics collection. Defaults to a `SimpleMeterRegistry`. |
 
