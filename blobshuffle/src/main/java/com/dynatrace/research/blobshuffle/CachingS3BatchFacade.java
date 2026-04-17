@@ -115,7 +115,7 @@ public class CachingS3BatchFacade implements S3BatchFacade {
             s3Cache.putObject(objectPath, readBatch); // Maybe put to cache _after_ put to S3 (?)
             this.everCached.put(objectPath, DUMMY); //TODO Temp
             //System.out.println("Write to cache: " + objectPath + " (" + batchSizeInBytes + " bytes)");
-            maybeWrappedInputStream = new ByteArrayInputStream(readBatch);
+            maybeWrappedInputStream = new RewindableByteArrayInputStream(readBatch);
         } else {
             maybeWrappedInputStream = batchInputStream;
         }

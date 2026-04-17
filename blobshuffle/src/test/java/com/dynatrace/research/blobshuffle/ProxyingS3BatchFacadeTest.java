@@ -28,6 +28,7 @@
 package com.dynatrace.research.blobshuffle;
 
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -38,6 +39,8 @@ import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.mockito.ArgumentMatchers.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ProxyingS3BatchFacadeTest {
 
@@ -169,5 +172,75 @@ class ProxyingS3BatchFacadeTest {
             Assertions.assertArrayEquals(testBatch, readBatchBytes);
             Assertions.assertEquals(testBatch.length, readBatch.size());
         }
+    }
+
+    @Test
+    public void testWriteFallbackOnForwardFailure() throws IOException {
+        S3BatchFacade localFacade = Mockito.mock();
+
+        AtomicReference<byte[]> capturedBytes = new AtomicReference<>(null);
+        Mockito.doAnswer(invocation -> {
+            InputStream is = invocation.getArgument(1);
+            capturedBytes.set(is.readAllBytes());
+            return null;
+        }).when(localFacade).writeBatch(anyString(), any(), anyInt());
+
+        // "test2" routes to the second member (localhost:7071), which has no server — triggers fallback
+        try (ProxyingS3BatchFacade facade = new ProxyingS3BatchFacade(
+                localFacade,
+                7070,
+                new StaticMemberDiscoverer("localhost:7070", "localhost:7071"),
+                new SimpleMeterRegistry())) {
+
+            BatchCollector batchCollector = new BatchCollector(1024 * 1024);
+            batchCollector.addRecord(0, new byte[]{1, 2, 3}, new byte[]{4, 5, 6}, 0L, new RecordHeaders());
+            int batchSize = batchCollector.getSizeInBytes(); // must be called before getAsInputStream() flips the buffers
+            InputStream batchInputStream = batchCollector.getAsInputStream();
+
+            // Should not throw - falls back to localFacade after forward failure
+            facade.writeBatch("test2", batchInputStream, batchSize);
+
+            Mockito.verify(localFacade).writeBatch(eq("test2"), any(InputStream.class), eq(batchSize));
+            assertThat(capturedBytes.get()).hasSize(batchSize);
+        }
+    }
+
+    @Test
+    public void testReadFallbackOnForwardFailure() throws IOException {
+        S3BatchFacade localFacade = Mockito.mock();
+
+        byte[] testBatch = new byte[]{1, 2, 3, 4, 5};
+        Mockito.when(localFacade.readBatch("test2"))
+                .thenReturn(new S3BatchFacade.SizeAwareInputStream(new ByteArrayInputStream(testBatch), testBatch.length));
+
+        // "test2" routes to the second member (localhost:7071), which has no server — triggers fallback
+        try (ProxyingS3BatchFacade facade = new ProxyingS3BatchFacade(
+                localFacade,
+                7070,
+                new StaticMemberDiscoverer("localhost:7070", "localhost:7071"),
+                new SimpleMeterRegistry())) {
+
+            S3BatchFacade.SizeAwareInputStream result = facade.readBatch("test2");
+
+            assertThat(result.readAllBytes()).isEqualTo(testBatch);
+            Mockito.verify(localFacade).readBatch("test2");
+        }
+    }
+
+    @Test
+    public void testBatchCollectorInputStreamRewind() throws IOException {
+        BatchCollector batchCollector = new BatchCollector(1024 * 1024);
+        batchCollector.addRecord(0, new byte[]{1, 2, 3}, new byte[]{4, 5, 6}, 42L, new RecordHeaders());
+        batchCollector.addRecord(1, new byte[]{7, 8}, new byte[]{9}, 99L, new RecordHeaders());
+
+        InputStream stream = batchCollector.getAsInputStream();
+        byte[] firstRead = stream.readAllBytes();
+
+        assertThat(firstRead).hasSize(batchCollector.getSizeInBytes());
+
+        ((RewindableInputStream) stream).rewind();
+        byte[] secondRead = stream.readAllBytes();
+
+        assertThat(secondRead).isEqualTo(firstRead);
     }
 }

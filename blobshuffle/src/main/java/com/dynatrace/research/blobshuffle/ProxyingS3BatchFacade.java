@@ -33,15 +33,11 @@ import io.javalin.Javalin;
 import io.javalin.http.Header;
 import io.javalin.http.HttpStatus;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 import org.apache.kafka.common.utils.Utils;
-import org.jetbrains.annotations.NotNull;
-import org.jgroups.Address;
 import org.jgroups.JChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
@@ -49,7 +45,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.List;
 
 /**
@@ -151,7 +146,17 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
             this.wrapped.writeBatch(objectPath, batchInputStream, batchSizeInBytes);
         } else {
             LOGGER.debug("Forward write request for object '{}' to '{}'", objectPath, objectOwner);
-            this.forwardWriteBatch(objectPath, batchInputStream, batchSizeInBytes, objectOwner);
+            try {
+                this.forwardWriteBatch(objectPath, batchInputStream, batchSizeInBytes, objectOwner);
+            } catch (ForwardBatchException e) {
+                if (batchInputStream instanceof RewindableInputStream rewindable) {
+                    LOGGER.warn("Failed to forward write request for object '{}' to '{}', falling back to local write.", objectPath, objectOwner, e);
+                    rewindable.rewind();
+                    this.wrapped.writeBatch(objectPath, rewindable, batchSizeInBytes);
+                } else {
+                    throw e;
+                }
+            }
         }
     }
 
@@ -164,14 +169,16 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
         try {
             HttpResponse<String> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != HttpStatus.CREATED.getCode()) {
-                throw new RuntimeException("Write request to member " + objectOwner + " resulted in unexpected status code " + response.statusCode());
+                throw new ForwardBatchException("Write request to member " + objectOwner + " resulted in unexpected status code " + response.statusCode());
             }
+        } catch (ForwardBatchException e) {
+            throw e;
         } catch (ConnectException e) {
-            throw new RuntimeException("Failed to connect to member "+ objectOwner, e);
+            throw new ForwardBatchException("Failed to connect to member " + objectOwner, e);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ForwardBatchException("Write request to member " + objectOwner + " failed", e);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            throw new ForwardBatchException("Write request to member " + objectOwner + " was interrupted", e);
         }
     }
 
@@ -180,8 +187,13 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
         if (objectOwner.equals(this.memberDiscoverer.getThisMember())) {
             return this.wrapped.readBatch(objectPath);
         } else {
-            LOGGER.debug("Forward read request for object '{}' to '{}'", objectPath, objectOwner);
-            return forwardReadBatch(objectPath, objectOwner);
+            LOGGER.debug("Forward read request for object '{}' to '{}'.", objectPath, objectOwner);
+            try {
+                return forwardReadBatch(objectPath, objectOwner);
+            } catch (ForwardBatchException e) {
+                LOGGER.warn("Failed to forward read request for object '{}' to '{}', falling back to local read.", objectPath, objectOwner, e);
+                return this.wrapped.readBatch(objectPath);
+            }
         }
     }
 
@@ -191,8 +203,13 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
         if (objectOwner.equals(this.memberDiscoverer.getThisMember())) {
             return this.wrapped.readPartialBatch(objectPath, offsetStart, offsetEnd);
         } else {
-            LOGGER.debug("Forward partial read request for object '{}' to '{}'", objectPath, objectOwner);
-            return forwardReadBatch(objectPath, objectOwner, offsetStart, offsetEnd);
+            LOGGER.debug("Forward partial read request for object '{}' to '{}'.", objectPath, objectOwner);
+            try {
+                return forwardReadBatch(objectPath, objectOwner, offsetStart, offsetEnd);
+            } catch (ForwardBatchException e) {
+                LOGGER.warn("Failed to forward partial read request for object '{}' to '{}', falling back to local read.", objectPath, objectOwner, e);
+                return this.wrapped.readPartialBatch(objectPath, offsetStart, offsetEnd);
+            }
         }
     }
 
@@ -214,12 +231,14 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
         try {
             HttpResponse<InputStream> response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
             if (response.statusCode() != HttpStatus.OK.getCode()) {
-                throw new RuntimeException("Read request to member " + uri.getHost() + ":" + uri.getPort() + " resulted in unexpected status code " + response.statusCode());
+                throw new ForwardBatchException("Read request to member " + uri.getHost() + ":" + uri.getPort() + " resulted in unexpected status code " + response.statusCode());
             }
             int contentLength = Integer.parseInt(response.headers().firstValue("Content-Length").orElseThrow());
             return new SizeAwareInputStream(response.body(), contentLength);
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new ForwardBatchException("Read request to member " + uri.getHost() + ":" + uri.getPort() + " failed", e);
+        } catch (InterruptedException e) {
+            throw new ForwardBatchException("Read request to member " + uri.getHost() + ":" + uri.getPort() + " was interrupted", e);
         }
     }
 
