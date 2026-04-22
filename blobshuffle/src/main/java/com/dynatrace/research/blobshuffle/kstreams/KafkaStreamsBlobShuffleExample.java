@@ -275,9 +275,15 @@ public class KafkaStreamsBlobShuffleExample {
     //final String regionName = "<AWS Region>";
     S3Client s3Client = S3Client
             .builder()
-            .httpClient(Apache5HttpClient.builder().maxConnections(100).build())
+            .httpClient(Apache5HttpClient.builder()
+                    .maxConnections(100)
+                    .socketTimeout(Duration.ofSeconds(5))
+                    .build())
             //.region(Region.of(regionName))
             .credentialsProvider(credentialProvider)
+            .overrideConfiguration(o -> o
+                    .apiCallTimeout(Duration.ofSeconds(30))
+                    .apiCallAttemptTimeout(Duration.ofSeconds(5)))
             .build();
 
     String kafkaBootstrapServers = config.getValue("kafka.bootstrap.servers", String.class);

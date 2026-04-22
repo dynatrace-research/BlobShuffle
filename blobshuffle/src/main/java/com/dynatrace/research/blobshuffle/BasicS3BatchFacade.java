@@ -27,6 +27,7 @@
  */
 package com.dynatrace.research.blobshuffle;
 
+import com.dynatrace.research.blobshuffle.util.DelegatingInputStream;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -116,12 +117,15 @@ public class BasicS3BatchFacade implements S3BatchFacade {
 
     @Override
     public void writeBatch(String objectPath, InputStream batchInputStream, int batchSizeInBytes) {
+        InputStream s3Input = batchInputStream instanceof RewindableInputStream rewindable
+                ? new RetryableInputStream(rewindable)
+                : batchInputStream;
         PutObjectResponse response = this.putsTimer.record(() ->
                 s3Client.putObject(request ->
                                 request
                                         .bucket(bucketName)
                                         .key(objectPath),
-                        RequestBody.fromInputStream(batchInputStream, batchSizeInBytes))
+                        RequestBody.fromInputStream(s3Input, batchSizeInBytes))
         );
         this.putsCounter.increment();
         try {
@@ -159,6 +163,37 @@ public class BasicS3BatchFacade implements S3BatchFacade {
     @Override
     public void close() {
 
+    }
+
+    /**
+     * Wraps a {@link RewindableInputStream} to support {@link #markSupported()}, {@link #mark(int)},
+     * and {@link #reset()} as required by the AWS SDK for retryable PUT requests.
+     *
+     * <p>The SDK always marks at position 0 before reading the body, then calls {@link #reset()}
+     * to rewind for each retry attempt. Therefore, {@link #mark(int)} is a no-op and
+     * {@link #reset()} simply delegates to {@link RewindableInputStream#rewind()}.
+     */
+    private static class RetryableInputStream extends DelegatingInputStream {
+
+        private final RewindableInputStream rewindable;
+
+        RetryableInputStream(RewindableInputStream rewindable) {
+            super(rewindable);
+            this.rewindable = rewindable;
+        }
+
+        @Override
+        public boolean markSupported() {
+            return true;
+        }
+
+        @Override
+        public void mark(int readlimit) {}
+
+        @Override
+        public void reset() {
+            rewindable.rewind();
+        }
     }
 
 }
