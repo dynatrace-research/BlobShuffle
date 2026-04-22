@@ -168,7 +168,7 @@ public class BatchCollector {
      * @return the input stream
      */
     public InputStream getAsInputStream() {
-        return new BatchCollectorInputStream(this.byteBuffers.values().iterator());
+        return new BatchCollectorInputStream(this.byteBuffers.values());
     }
 
     /**
@@ -192,17 +192,33 @@ public class BatchCollector {
      */
     public record OffsetRange(int startInclusive, int endExclusive) {}
 
-    private static class BatchCollectorInputStream extends InputStream {
+    static class BatchCollectorInputStream extends RewindableInputStream {
 
-        private final Iterator<ByteBuffer> iterator;
+        private final Collection<ByteBuffer> buffers;
+
+        private Iterator<ByteBuffer> iterator;
 
         private ByteBuffer currentBuffer;
 
-        public BatchCollectorInputStream(Iterator<ByteBuffer> iterator) {
-            this.iterator = iterator;
+        BatchCollectorInputStream(Collection<ByteBuffer> buffers) {
+            this.buffers = buffers;
+            for (ByteBuffer buffer : buffers) {
+                buffer.flip();
+            }
+            this.iterator = buffers.iterator();
+            this.currentBuffer = this.iterator.hasNext() ? this.iterator.next() : null;
+        }
+
+        @Override
+        public void rewind() {
+            for (ByteBuffer buffer : this.buffers) {
+                buffer.rewind();
+            }
+            this.iterator = this.buffers.iterator();
             if (this.iterator.hasNext()) {
                 this.currentBuffer = this.iterator.next();
-                this.currentBuffer.flip();
+            } else {
+                this.currentBuffer = null;
             }
         }
 
@@ -212,9 +228,8 @@ public class BatchCollector {
                 return -1;
             }
             while (!this.currentBuffer.hasRemaining()) {
-                if (iterator.hasNext()) {
+                if (this.iterator.hasNext()) {
                     this.currentBuffer = this.iterator.next();
-                    this.currentBuffer.flip();
                 } else {
                     return -1;
                 }
@@ -226,12 +241,11 @@ public class BatchCollector {
         public int read(byte[] bytes, int off, int len) {
             int effectiveLen = 0;
             while (effectiveLen < len && this.currentBuffer != null && this.currentBuffer.hasRemaining()) {
-                int readLen = Math.min(Math.min(len, this.currentBuffer.remaining()), len - effectiveLen);
-                this.currentBuffer.get(bytes, effectiveLen, readLen);
+                int readLen = Math.min(this.currentBuffer.remaining(), len - effectiveLen);
+                this.currentBuffer.get(bytes, off + effectiveLen, readLen);
                 effectiveLen += readLen;
-                while (!this.currentBuffer.hasRemaining() && this.iterator.hasNext()) {
+                while (this.currentBuffer != null && !this.currentBuffer.hasRemaining() && this.iterator.hasNext()) {
                     this.currentBuffer = this.iterator.next();
-                    this.currentBuffer.flip();
                 }
             }
             if (effectiveLen == 0 && len > 0) {
