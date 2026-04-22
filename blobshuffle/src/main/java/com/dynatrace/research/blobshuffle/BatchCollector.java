@@ -30,6 +30,9 @@ package com.dynatrace.research.blobshuffle;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.InputStream;
 import java.nio.Buffer;
 import java.nio.BufferOverflowException;
@@ -42,6 +45,8 @@ import java.util.*;
  * Records for all partitions in the same target AZ are concatenated into a single batch.
  */
 public class BatchCollector {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BatchCollector.class);
 
     private final int batchMaxBytes;
 
@@ -79,12 +84,24 @@ public class BatchCollector {
             this.addRecordToBuffer(buffer, outputPartition, recordKey, recordValue, recordTimestamp, recordHeaders);
         } catch (BufferOverflowException e) {
             buffer.reset(); // Reset buffer to the marked position to discard the partially written record
-            throw new IllegalStateException("Cannot add record to batch for partition " + outputPartition + " as it would exceed the maximum batch size of " + batchMaxBytes + " bytes", e);
+            // Grow the buffer and retry
+            buffer = growBuffer(buffer);
+            byteBuffers.put(outputPartition, buffer);
+            LOGGER.info("Resized buffer for partition {} from {} to {} bytes.", outputPartition, buffer.capacity() / 2, buffer.capacity());
+            this.addRecordToBuffer(buffer, outputPartition, recordKey, recordValue, recordTimestamp, recordHeaders);
         }
 
         // Update metadata
         this.highestTimestamp = Math.max(this.highestTimestamp, recordTimestamp);
         this.numRecords++;
+    }
+
+    private static ByteBuffer growBuffer(ByteBuffer original) {
+        int newCapacity = original.capacity() * 2;
+        ByteBuffer grown = ByteBuffer.allocate(newCapacity);
+        original.flip();
+        grown.put(original);
+        return grown;
     }
 
     private void addRecordToBuffer(ByteBuffer buffer, int outputPartition, byte[] recordKey, byte[] recordValue, long recordTimestamp, Headers recordHeaders) throws BufferOverflowException {
