@@ -97,7 +97,7 @@ public class DebatcherProcessor<K, V> extends AbstractCommitListenerProcessor<No
 
     @Override
     public void preCommit() { // TODO maybe protected
-        LOGGER.debug("Start commit process. Wait for all pending S3 fetches.");
+        LOGGER.debug("Start commit process. Wait for all pending object storage fetches.");
         asyncOps.drainResults(this::forwardBatchRecords); // Might block if the results to be collected
         LOGGER.debug("All results have been collected and output records have been forwarded.");
     }
