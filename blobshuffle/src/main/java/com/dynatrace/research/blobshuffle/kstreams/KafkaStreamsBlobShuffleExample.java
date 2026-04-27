@@ -91,9 +91,9 @@ public class KafkaStreamsBlobShuffleExample {
   ) {
     //this.zone = zone;
     if (zone.isPresent()) {
-      LOGGER.info("Start S3 Batcher with configured zone '{}'.", zone.get());
+      LOGGER.info("Start BlobShuffle with configured zone '{}'.", zone.get());
     } else {
-      LOGGER.info("Start S3 Batcher without configured zone.");
+      LOGGER.info("Start BlobShuffle Batcher without configured zone.");
     }
 
     this.kafkaTopicInput = kafkaTopicInput;
