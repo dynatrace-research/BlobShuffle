@@ -303,16 +303,9 @@ public class KafkaStreamsBlobShuffleExample {
             kafkaStreamsProps
     );
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      LOGGER.info("Shutdown hook triggered, closing Kafka Streams instance...");
+      LOGGER.info("Shutdown hook triggered, closing Kafka Streams instance.");
       kafkaStreamsBlobShuffle.stop();
       LOGGER.info("Kafka Streams instance closed.");
-      LOGGER.info("Now sleep...");
-        try {
-            Thread.sleep(30_000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-      LOGGER.info("Sleep finished.");
     }));
 
     kafkaStreamsBlobShuffle.start();
