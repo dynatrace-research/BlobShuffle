@@ -31,7 +31,7 @@ import java.util.SplittableRandom;
 import java.util.function.Supplier;
 
 /**
- * Generates unique, time-ordered object identifiers for S3 batches.
+ * Generates unique, time-ordered object identifiers for object storage batches.
  * Each identifier is composed of a hex-encoded timestamp followed by a random hex suffix.
  */
 public class ObjectIdSupplier implements Supplier<String> {
