@@ -18,11 +18,14 @@ spec:
           - "blobshuffle-service-monitor.yaml"
           - "blobshuffle-service.yaml"
     afterActions:
-      - delete:
+      - exec:
           selector:
-            apiVersion: kafka.strimzi.io/v1beta2
-            kind: KafkaTopic
-            nameRegex: "^blobshuffle-kstreams-.*"
+            pod:
+              matchLabels:
+                app: kafka-client
+            container: kafka-client
+          command: ["bash", "-c", "kafka-topics --bootstrap-server $BOOTSTRAP_SERVER --delete --topic 'blobshuffle-kstreams-.*'"]
+          timeoutSeconds: 30
   loadGenerator:
     resources:
       - configMap:

@@ -64,9 +64,9 @@ public class KafkaStreamsBlobShuffleExample {
   ) {
     //this.zone = zone;
     if (zone.isPresent()) {
-      LOGGER.info("Start S3 Batcher with configured zone '{}'.", zone.get());
+      LOGGER.info("Start BlobShuffle with configured zone '{}'.", zone.get());
     } else {
-      LOGGER.info("Start S3 Batcher without configured zone.");
+      LOGGER.info("Start BlobShuffle Batcher without configured zone.");
     }
 
     this.kafkaTopicInput = kafkaTopicInput;
@@ -248,9 +248,15 @@ public class KafkaStreamsBlobShuffleExample {
     //final String regionName = "<AWS Region>";
     S3Client s3Client = S3Client
             .builder()
-            .httpClient(Apache5HttpClient.builder().maxConnections(100).build())
+            .httpClient(Apache5HttpClient.builder()
+                    .maxConnections(100)
+                    .socketTimeout(Duration.ofSeconds(5))
+                    .build())
             //.region(Region.of(regionName))
             .credentialsProvider(credentialProvider)
+            .overrideConfiguration(o -> o
+                    .apiCallTimeout(Duration.ofSeconds(30))
+                    .apiCallAttemptTimeout(Duration.ofSeconds(5)))
             .build();
 
     String kafkaBootstrapServers = config.getValue("kafka.bootstrap.servers", String.class);
@@ -297,16 +303,9 @@ public class KafkaStreamsBlobShuffleExample {
             kafkaStreamsProps
     );
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      LOGGER.info("Shutdown hook triggered, closing Kafka Streams instance...");
+      LOGGER.info("Shutdown hook triggered, closing Kafka Streams instance.");
       kafkaStreamsBlobShuffle.stop();
       LOGGER.info("Kafka Streams instance closed.");
-      LOGGER.info("Now sleep...");
-        try {
-            Thread.sleep(30_000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-      LOGGER.info("Sleep finished.");
     }));
 
     kafkaStreamsBlobShuffle.start();

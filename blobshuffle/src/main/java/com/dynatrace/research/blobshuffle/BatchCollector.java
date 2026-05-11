@@ -3,6 +3,9 @@ package com.dynatrace.research.blobshuffle;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.InputStream;
 import java.nio.Buffer;
 import java.nio.BufferOverflowException;
@@ -15,6 +18,8 @@ import java.util.*;
  * Records for all partitions in the same target AZ are concatenated into a single batch.
  */
 public class BatchCollector {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BatchCollector.class);
 
     private final int batchMaxBytes;
 
@@ -52,12 +57,24 @@ public class BatchCollector {
             this.addRecordToBuffer(buffer, outputPartition, recordKey, recordValue, recordTimestamp, recordHeaders);
         } catch (BufferOverflowException e) {
             buffer.reset(); // Reset buffer to the marked position to discard the partially written record
-            throw new IllegalStateException("Cannot add record to batch for partition " + outputPartition + " as it would exceed the maximum batch size of " + batchMaxBytes + " bytes", e);
+            // Grow the buffer and retry
+            buffer = growBuffer(buffer);
+            byteBuffers.put(outputPartition, buffer);
+            LOGGER.info("Resized buffer for partition {} from {} to {} bytes.", outputPartition, buffer.capacity() / 2, buffer.capacity());
+            this.addRecordToBuffer(buffer, outputPartition, recordKey, recordValue, recordTimestamp, recordHeaders);
         }
 
         // Update metadata
         this.highestTimestamp = Math.max(this.highestTimestamp, recordTimestamp);
         this.numRecords++;
+    }
+
+    private static ByteBuffer growBuffer(ByteBuffer original) {
+        int newCapacity = original.capacity() * 2;
+        ByteBuffer grown = ByteBuffer.allocate(newCapacity);
+        original.flip();
+        grown.put(original);
+        return grown;
     }
 
     private void addRecordToBuffer(ByteBuffer buffer, int outputPartition, byte[] recordKey, byte[] recordValue, long recordTimestamp, Headers recordHeaders) throws BufferOverflowException {
@@ -168,7 +185,7 @@ public class BatchCollector {
      * @return the input stream
      */
     public InputStream getAsInputStream() {
-        return new BatchCollectorInputStream(this.byteBuffers.values().iterator());
+        return new BatchCollectorInputStream(this.byteBuffers.values());
     }
 
     /**
@@ -192,17 +209,33 @@ public class BatchCollector {
      */
     public record OffsetRange(int startInclusive, int endExclusive) {}
 
-    private static class BatchCollectorInputStream extends InputStream {
+    static class BatchCollectorInputStream extends RewindableInputStream {
 
-        private final Iterator<ByteBuffer> iterator;
+        private final Collection<ByteBuffer> buffers;
+
+        private Iterator<ByteBuffer> iterator;
 
         private ByteBuffer currentBuffer;
 
-        public BatchCollectorInputStream(Iterator<ByteBuffer> iterator) {
-            this.iterator = iterator;
+        BatchCollectorInputStream(Collection<ByteBuffer> buffers) {
+            this.buffers = buffers;
+            for (ByteBuffer buffer : buffers) {
+                buffer.flip();
+            }
+            this.iterator = buffers.iterator();
+            this.currentBuffer = this.iterator.hasNext() ? this.iterator.next() : null;
+        }
+
+        @Override
+        public void rewind() {
+            for (ByteBuffer buffer : this.buffers) {
+                buffer.rewind();
+            }
+            this.iterator = this.buffers.iterator();
             if (this.iterator.hasNext()) {
                 this.currentBuffer = this.iterator.next();
-                this.currentBuffer.flip();
+            } else {
+                this.currentBuffer = null;
             }
         }
 
@@ -212,9 +245,8 @@ public class BatchCollector {
                 return -1;
             }
             while (!this.currentBuffer.hasRemaining()) {
-                if (iterator.hasNext()) {
+                if (this.iterator.hasNext()) {
                     this.currentBuffer = this.iterator.next();
-                    this.currentBuffer.flip();
                 } else {
                     return -1;
                 }
@@ -226,12 +258,11 @@ public class BatchCollector {
         public int read(byte[] bytes, int off, int len) {
             int effectiveLen = 0;
             while (effectiveLen < len && this.currentBuffer != null && this.currentBuffer.hasRemaining()) {
-                int readLen = Math.min(Math.min(len, this.currentBuffer.remaining()), len - effectiveLen);
-                this.currentBuffer.get(bytes, effectiveLen, readLen);
+                int readLen = Math.min(this.currentBuffer.remaining(), len - effectiveLen);
+                this.currentBuffer.get(bytes, off + effectiveLen, readLen);
                 effectiveLen += readLen;
-                while (!this.currentBuffer.hasRemaining() && this.iterator.hasNext()) {
+                while (this.currentBuffer != null && !this.currentBuffer.hasRemaining() && this.iterator.hasNext()) {
                     this.currentBuffer = this.iterator.next();
-                    this.currentBuffer.flip();
                 }
             }
             if (effectiveLen == 0 && len > 0) {
