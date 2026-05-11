@@ -88,7 +88,7 @@ public class CachingS3BatchFacade implements S3BatchFacade {
     public CachingS3BatchFacade(S3BatchFacade wrapped, int cacheSize, boolean cacheOnWrite, MeterRegistry metricRegistry, String metricsTypeValue) {
         this.wrapped = wrapped;
         this.cacheOnWrite = cacheOnWrite;
-        this.s3Cache = new BlobCache(cacheSize);
+        this.s3Cache = new InMemoryBlobCache(cacheSize);
         this.pendingReads =  new ConcurrentHashMap<>();
         this.metricRegistry = metricRegistry;
         this.cacheHitsCounter = Counter
