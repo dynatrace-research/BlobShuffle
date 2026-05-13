@@ -273,17 +273,21 @@ public class KafkaStreamsBlobShuffleExample {
     AwsCredentialsProvider credentialProvider = DefaultCredentialsProvider.create();
     final String bucketName = config.getValue("s3.bucket", String.class);
     //final String regionName = "<AWS Region>";
+    int s3MaxConnections = config.getValue("s3.http.max.connections", Integer.class);
+    Duration s3SocketTimeout = Duration.ofMillis(config.getValue("s3.http.socket.timeout.ms", Long.class));
+    Duration s3ApiCallTimeout = Duration.ofMillis(config.getValue("s3.api.call.timeout.ms", Long.class));
+    Duration s3ApiCallAttemptTimeout = Duration.ofMillis(config.getValue("s3.api.call.attempt.timeout.ms", Long.class));
     S3Client s3Client = S3Client
             .builder()
             .httpClient(Apache5HttpClient.builder()
-                    .maxConnections(100)
-                    .socketTimeout(Duration.ofSeconds(5))
+                    .maxConnections(s3MaxConnections)
+                    .socketTimeout(s3SocketTimeout)
                     .build())
             //.region(Region.of(regionName))
             .credentialsProvider(credentialProvider)
             .overrideConfiguration(o -> o
-                    .apiCallTimeout(Duration.ofSeconds(30))
-                    .apiCallAttemptTimeout(Duration.ofSeconds(5)))
+                    .apiCallTimeout(s3ApiCallTimeout)
+                    .apiCallAttemptTimeout(s3ApiCallAttemptTimeout))
             .build();
 
     String kafkaBootstrapServers = config.getValue("kafka.bootstrap.servers", String.class);
