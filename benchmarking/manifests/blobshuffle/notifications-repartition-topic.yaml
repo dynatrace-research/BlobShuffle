@@ -1,0 +1,14 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: blobshuffle-kstreams-notifications-repartition
+  labels:
+    strimzi.io/cluster: theodolite-kafka
+spec:
+  # Kafka Streams would auto-create this topic with the same partition count as the input topic.
+  # Theodolite overrides this automatically during benchmarking (same factor as the input topic).
+  partitions: 81
+  replicas: 1
+  config:
+    # Repartition topics use cleanup.policy=delete by default in Kafka Streams
+    cleanup.policy: delete

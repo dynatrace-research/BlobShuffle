@@ -8,7 +8,7 @@ strimzi-kafka-operator:
   createGlobalResources: true  # Required for rack-awareness
   extraEnvs:
     - name: STRIMZI_KUBERNETES_VERSION
-      value: "major=1,minor=33"
+      value: "major=1,minor=28"
 
 strimzi:
   kafka:
@@ -45,8 +45,8 @@ prometheus:
   scrapeInterval: 5s
 
 operator:
-  imageTag: latest
-  imagePullPolicy: Always
+  #imageTag: latest
+  #imagePullPolicy: Always
   resultsVolume:
     persistent:
       enabled: false

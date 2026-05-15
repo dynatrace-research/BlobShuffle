@@ -19,7 +19,7 @@ spec:
       name: "FullSearch"
     duration: 900 # in seconds
     loadGenerationDelay: 30 # in seconds
-    repetitions: 1
+    repetitions: 3
   configOverrides:
     - patcher:
         type: "NodeSelectorPatcher"
@@ -27,3 +27,17 @@ spec:
         properties:
           variableName: "nodegroup-size-15"
       value: "true"
+    - patcher:
+        type: "EnvVarPatcher"
+        resource: "blobshuffle-deployment.yaml"
+        properties:
+          container: "blobshuffle"
+          variableName: "KAFKASTREAMS__SESSION_TIMEOUT_MS__"
+      value: "120000"
+    - patcher:
+        type: "EnvVarPatcher"
+        resource: "blobshuffle-deployment.yaml"
+        properties:
+          container: "blobshuffle"
+          variableName: "KAFKASTREAMS__REQUEST_TIMEOUT_MS__"
+      value: "120000"

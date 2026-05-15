@@ -9,7 +9,7 @@ spec:
           name: blobshuffle-resources
           files:
           - "input-topic.yaml"
-          - "notifications-topic.yaml"
+          - "notifications-repartition-topic.yaml"
           - "output-topic.yaml"
           - "blobshuffle-deployment.yaml"
           - "blobshuffle-jgroups-service.yaml"
@@ -17,15 +17,6 @@ spec:
           #- "blobshuffle-rbac.yaml"
           - "blobshuffle-service-monitor.yaml"
           - "blobshuffle-service.yaml"
-    afterActions:
-      - exec:
-          selector:
-            pod:
-              matchLabels:
-                app: kafka-client
-            container: kafka-client
-          command: ["bash", "-c", "kafka-topics --bootstrap-server $BOOTSTRAP_SERVER --delete --topic 'blobshuffle-kstreams-.*'"]
-          timeoutSeconds: 30
   loadGenerator:
     resources:
       - configMap:
@@ -40,6 +31,12 @@ spec:
           resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
+          properties:
+            path: "spec/partitions"
+            type: integer
+            factor: 9
+        - type: GenericResourcePatcher
+          resource: "notifications-repartition-topic.yaml"
           properties:
             path: "spec/partitions"
             type: integer
@@ -61,6 +58,12 @@ spec:
             type: integer
             factor: 3
         - type: GenericResourcePatcher
+          resource: "notifications-repartition-topic.yaml"
+          properties:
+            path: "spec/partitions"
+            type: integer
+            factor: 3
+        - type: GenericResourcePatcher
           resource: "output-topic.yaml"
           properties:
             path: "spec/partitions"
@@ -72,6 +75,12 @@ spec:
           resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
+          properties:
+            path: "spec/partitions"
+            type: integer
+            factor: 6
+        - type: GenericResourcePatcher
+          resource: "notifications-repartition-topic.yaml"
           properties:
             path: "spec/partitions"
             type: integer
@@ -93,6 +102,12 @@ spec:
             type: integer
             factor: 9
         - type: GenericResourcePatcher
+          resource: "notifications-repartition-topic.yaml"
+          properties:
+            path: "spec/partitions"
+            type: integer
+            factor: 9
+        - type: GenericResourcePatcher
           resource: "output-topic.yaml"
           properties:
             path: "spec/partitions"
@@ -104,6 +119,12 @@ spec:
           resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
+          properties:
+            path: "spec/partitions"
+            type: integer
+            factor: 12
+        - type: GenericResourcePatcher
+          resource: "notifications-repartition-topic.yaml"
           properties:
             path: "spec/partitions"
             type: integer
@@ -125,6 +146,12 @@ spec:
             type: integer
             factor: 15
         - type: GenericResourcePatcher
+          resource: "notifications-repartition-topic.yaml"
+          properties:
+            path: "spec/partitions"
+            type: integer
+            factor: 15
+        - type: GenericResourcePatcher
           resource: "output-topic.yaml"
           properties:
             path: "spec/partitions"
@@ -136,6 +163,12 @@ spec:
           resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
+          properties:
+            path: "spec/partitions"
+            type: integer
+            factor: 18
+        - type: GenericResourcePatcher
+          resource: "notifications-repartition-topic.yaml"
           properties:
             path: "spec/partitions"
             type: integer
@@ -157,6 +190,12 @@ spec:
             type: integer
             factor: 21
         - type: GenericResourcePatcher
+          resource: "notifications-repartition-topic.yaml"
+          properties:
+            path: "spec/partitions"
+            type: integer
+            factor: 21
+        - type: GenericResourcePatcher
           resource: "output-topic.yaml"
           properties:
             path: "spec/partitions"
@@ -168,6 +207,12 @@ spec:
           resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
+          properties:
+            path: "spec/partitions"
+            type: integer
+            factor: 24
+        - type: GenericResourcePatcher
+          resource: "notifications-repartition-topic.yaml"
           properties:
             path: "spec/partitions"
             type: integer
@@ -189,6 +234,12 @@ spec:
             type: integer
             factor: 27
         - type: GenericResourcePatcher
+          resource: "notifications-repartition-topic.yaml"
+          properties:
+            path: "spec/partitions"
+            type: integer
+            factor: 27
+        - type: GenericResourcePatcher
           resource: "output-topic.yaml"
           properties:
             path: "spec/partitions"
@@ -200,6 +251,12 @@ spec:
           resource: "blobshuffle-deployment.yaml"
         - type: GenericResourcePatcher
           resource: "input-topic.yaml"
+          properties:
+            path: "spec/partitions"
+            type: integer
+            factor: 30
+        - type: GenericResourcePatcher
+          resource: "notifications-repartition-topic.yaml"
           properties:
             path: "spec/partitions"
             type: integer
@@ -255,6 +312,18 @@ spec:
       properties:
         externalSloUrl: "http://localhost:8082"
         promQLQuery: "sum by (topic) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic='output'}[20s]))"
+        queryAggregation: mean
+        repetitionAggregation: median
+        operator: "true"
+        threshold: 0
+        warmup: 120 # in seconds
+    - name: "latency_p00"
+      sloType: generic
+      prometheusUrl: "http://prometheus-operated:9090"
+      offset: 0
+      properties:
+        externalSloUrl: "http://localhost:8082"
+        promQLQuery: "histogram_quantile(0.00, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))"
         queryAggregation: mean
         repetitionAggregation: median
         operator: "true"
@@ -512,6 +581,31 @@ spec:
         operator: "true"
         threshold: 0
         warmup: 120 # in seconds
+    - name: "latency_raw"
+      sloType: generic
+      prometheusUrl: "http://prometheus-operated:9090"
+      offset: 0
+      properties:
+        takeOnlyFirstMetric: False
+        externalSloUrl: "http://localhost:8082"
+        promQLQuery: "sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le)"
+        queryAggregation: mean
+        repetitionAggregation: median
+        operator: "true"
+        threshold: 0
+        warmup: 120 # in seconds
+    - name: "latency_p00_total"
+      sloType: generic
+      prometheusUrl: "http://prometheus-operated:9090"
+      offset: 0
+      properties:
+        externalSloUrl: "http://localhost:8082"
+        promQLQuery: "histogram_quantile(0.00, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))"
+        queryAggregation: mean
+        repetitionAggregation: median
+        operator: "true"
+        threshold: 0
+        warmup: 360 # in seconds
     - name: "latency_p05_total"
       sloType: generic
       prometheusUrl: "http://prometheus-operated:9090"
@@ -759,6 +853,19 @@ spec:
       properties:
         externalSloUrl: "http://localhost:8082"
         promQLQuery: "histogram_quantile(1.0, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))"
+        queryAggregation: mean
+        repetitionAggregation: median
+        operator: "true"
+        threshold: 0
+        warmup: 360 # in seconds
+    - name: "latency_raw_total"
+      sloType: generic
+      prometheusUrl: "http://prometheus-operated:9090"
+      offset: 0
+      properties:
+        takeOnlyFirstMetric: False
+        externalSloUrl: "http://localhost:8082"
+        promQLQuery: "sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le)"
         queryAggregation: mean
         repetitionAggregation: median
         operator: "true"
