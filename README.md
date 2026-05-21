@@ -189,10 +189,10 @@ For split topologies (separate Batcher and Debatcher sub-topologies):
 
 ## Benchmarking and Evaluation
 
-<!-- TODO: Add instructions and resources for reproducing the paper's experimental evaluation. -->
+Instructions for setting up the cloud-native benchmarking environment, running experiments, and reproducing our paper's evaluation are available in the [benchmarking/](benchmarking/) directory.
 
-The experimental evaluation from the paper will be documented here. Instructions for setting up the cloud-native benchmarking environment, running experiments, and reproducing the results will be provided in the future.
 
-## Acknowledgments
+## Notice
 
-BlobShuffle is developed at [Dynatrace Research](https://engineering.dynatrace.com/research/).
+BlobShuffle is a research prototype developed at [Dynatrace Research](https://www.dynatrace.com/research/).
+It is **not** an officially supported Dynatrace product.
