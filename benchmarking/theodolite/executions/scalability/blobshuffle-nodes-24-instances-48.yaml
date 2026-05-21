@@ -8,7 +8,7 @@ spec:
     loadType: "BatchDesiredBytes"
     loadValues: [16777216] # 16MB
   resources:
-    resourceType: "Instances"
+    resourceType: "Instances-x6Partitions"
     resourceValues: [48]
   slos:
     - name: throughput
@@ -17,7 +17,7 @@ spec:
     metric: capacity
     strategy:
       name: "FullSearch"
-    duration: 1200 # in seconds
+    duration: 900 # in seconds
     loadGenerationDelay: 30 # in seconds
     repetitions: 3
   configOverrides:
@@ -33,18 +33,11 @@ spec:
         properties:
           container: "blobshuffle"
           variableName: "KAFKASTREAMS__SESSION_TIMEOUT_MS__"
-      value: "360000"
+      value: "180000"
     - patcher:
         type: "EnvVarPatcher"
         resource: "blobshuffle-deployment.yaml"
         properties:
           container: "blobshuffle"
           variableName: "KAFKASTREAMS__REQUEST_TIMEOUT_MS__"
-      value: "360000"
-    - patcher:
-        type: "EnvVarPatcher"
-        resource: "blobshuffle-deployment.yaml"
-        properties:
-          container: "blobshuffle"
-          variableName: "KAFKASTREAMS__MAX_POLL_INTERVAL_MS__"
-      value: "600000"
+      value: "180000"
