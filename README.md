@@ -112,6 +112,10 @@ The project uses Gradle with the included wrapper:
 
 # Generate Javadoc
 ./gradlew javadoc
+
+# Check and apply code style and formatting (e.g., license headers)
+./gradlew spotlessCheck
+./gradlew spotlessApply
 ```
 
 
@@ -196,3 +200,7 @@ Instructions for setting up the cloud-native benchmarking environment, running e
 
 BlobShuffle is a research prototype developed at [Dynatrace Research](https://www.dynatrace.com/research/).
 It is **not** an officially supported Dynatrace product.
+
+This repository is available under the terms in [LICENSE](LICENSE).
+Use is limited to internal, non-production, non-commercial purposes.
+Redistribution, sublicensing, modification, sale, and use for training or improving AI/ML models are not permitted.
