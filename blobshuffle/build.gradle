@@ -5,7 +5,7 @@ plugins {
 }
 
 application {
-    mainClassName = "com.dynatrace.research.blobshuffle.kstreams.KafkaStreamsBlobShuffleExample"
+    mainClass = "com.dynatrace.research.blobshuffle.kstreams.KafkaStreamsBlobShuffleExample"
 }
 
 java {
@@ -42,6 +42,7 @@ dependencies {
     implementation 'com.dynatrace.hash4j:hash4j:0.11.0'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.9.1'
     testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.9.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     //testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.23.1'
     //testImplementation group: 'org.hipparchus', name: 'hipparchus-stat', version: '2.3'
     testImplementation "org.testcontainers:junit-jupiter:1.20.5"
