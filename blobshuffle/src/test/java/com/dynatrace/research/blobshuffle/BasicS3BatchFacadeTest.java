@@ -27,12 +27,12 @@
  */
 package com.dynatrace.research.blobshuffle;
 
+
+import io.floci.testcontainers.FlociContainer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -42,31 +42,30 @@ import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 @Testcontainers
 class BasicS3BatchFacadeTest {
 
     @Container
-    private LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.5.0"))
-            .withServices(S3);
+    private FlociContainer floci = new FlociContainer();
 
     @Test
     public void testReadAfterWriteWithLargeBatch() throws IOException {
         S3Client s3Client = S3Client
                 .builder()
-                .endpointOverride(localstack.getEndpoint())
+                .endpointOverride(URI.create(floci.getEndpoint()))
                 .credentialsProvider(
                         StaticCredentialsProvider.create(
-                                AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey())
+                                AwsBasicCredentials.create(floci.getAccessKey(), floci.getSecretKey())
                         )
                 )
-                .region(Region.of(localstack.getRegion()))
+                .region(Region.of(floci.getRegion()))
                 .build();
         String bucketName = "test-bucket";
         s3Client.createBucket(request -> request.bucket(bucketName));

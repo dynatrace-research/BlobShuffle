@@ -27,10 +27,12 @@
  */
 package com.dynatrace.research.blobshuffle.kstreams;
 
+
 import com.dynatrace.hash4j.hashing.Hasher64;
 import com.dynatrace.hash4j.hashing.Hashing;
 import com.dynatrace.research.blobshuffle.*;
 import com.dynatrace.research.shufflebench.KafkaLoadGenerator;
+import io.floci.testcontainers.FlociContainer;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -44,10 +46,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.http.apache5.Apache5HttpClient;
@@ -56,13 +56,13 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.Bucket;
 import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 @Testcontainers
 class KafkaStreamsBlobShuffleE2ETest {
@@ -72,8 +72,7 @@ class KafkaStreamsBlobShuffleE2ETest {
     private final Hasher64 hasher = Hashing.komihash4_3(0x81c1f2b68962424dL);
 
     @Container
-    private LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.5.0"))
-            .withServices(S3);
+    private FlociContainer floci = new FlociContainer();
 
     /**
      * Runs the full BlobShuffle pipeline with a 3-node Kafka cluster,
@@ -179,13 +178,13 @@ class KafkaStreamsBlobShuffleE2ETest {
         return S3Client
                 .builder()
                 .httpClient(Apache5HttpClient.builder().maxConnections(100).build())
-                .endpointOverride(localstack.getEndpoint())
+                .endpointOverride(URI.create(floci.getEndpoint()))
                 .credentialsProvider(
                         StaticCredentialsProvider.create(
-                                AwsBasicCredentials.create(localstack.getAccessKey(), localstack.getSecretKey())
+                                AwsBasicCredentials.create(floci.getAccessKey(), floci.getSecretKey())
                         )
                 )
-                .region(Region.of(localstack.getRegion()))
+                .region(Region.of(floci.getRegion()))
                 .build();
     }
 
