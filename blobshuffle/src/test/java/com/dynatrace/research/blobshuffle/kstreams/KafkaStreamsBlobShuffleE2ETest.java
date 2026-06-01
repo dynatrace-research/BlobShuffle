@@ -42,6 +42,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
+import org.apache.kafka.streams.StreamsConfig;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -124,7 +125,12 @@ class KafkaStreamsBlobShuffleE2ETest {
                     1024 * 1024,
                     Duration.ofSeconds(5),
                     Partitioner.KAFKA_BUILTIN,
-                    Map.of()
+                    // Shorten the commit interval so the batcher flushes accumulated records
+                    // within 1 s of them being written, rather than the default 30 s.
+                    // Without this, records still in the batcher when the load generator
+                    // stops can sit there for up to 30 s before preCommit() fires — making
+                    // the 30 s drain window a race condition.
+                    Map.of(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, "1000")
             );
             application.start();
 
