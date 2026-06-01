@@ -40,6 +40,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -61,6 +62,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -156,11 +158,18 @@ class KafkaStreamsBlobShuffleE2ETest {
             LOGGER.info("Wait 30 seconds for the pipeline to drain.");
             Thread.sleep(30_000);
 
+            long outputBeforeStop = countRecordsInTopic(bootstrapServers, outputTopic);
+            LOGGER.info("Records in output topic before stop(): {} / {} produced.", outputBeforeStop, producedRecords.size());
+
             LOGGER.info("Shut down Kafka Streams app.");
             application.stop();
 
+            long outputAfterStop = countRecordsInTopic(bootstrapServers, outputTopic);
+            LOGGER.info("Records in output topic after stop():  {} / {} produced (+{} added by stop()).",
+                    outputAfterStop, producedRecords.size(), outputAfterStop - outputBeforeStop);
+
             // --- Phase 3: Consume output and verify ---
-            LOGGER.info("Wait 10 seconds for before consuming output records.");
+            LOGGER.info("Wait 10 seconds before consuming output records.");
             Thread.sleep(10_000);
 
             LOGGER.info("Start consuming output records.");
@@ -191,6 +200,8 @@ class KafkaStreamsBlobShuffleE2ETest {
     /**
      * Consume all records from a topic, tolerating brief gaps in delivery.
      * Returns when 20 consecutive polls (10s) return no records.
+     * Logs each burst of arriving records with a relative timestamp so CI output
+     * reveals the timing pattern of the pipeline (e.g. one burst per S3 batch).
      */
     private List<Integer> consumeAllRecords(String bootstrapServers, String topic) {
         Properties consumerProperties = new Properties();
@@ -198,6 +209,7 @@ class KafkaStreamsBlobShuffleE2ETest {
         consumerProperties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "blobshuffle-test");
         consumerProperties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         List<Integer> records = new ArrayList<>();
+        long startMs = System.currentTimeMillis();
         try (KafkaConsumer<byte[], byte[]> consumer = new KafkaConsumer<>(
                 consumerProperties,
                 new ByteArrayDeserializer(),
@@ -215,9 +227,33 @@ class KafkaStreamsBlobShuffleE2ETest {
                     // Ignore last 8 bytes (which contain the timestamp)
                     records.add(hasher.hashBytesToInt(record.value(), 0, record.value().length - 8));
                 }
+                LOGGER.info("Received burst of {} records at t+{}ms (total so far: {}).",
+                        batch.count(), System.currentTimeMillis() - startMs, records.size());
             }
         }
         return records;
+    }
+
+    /**
+     * Returns the total number of records currently committed to a topic by summing
+     * (endOffset - beginOffset) across all partitions.  Does not consume any records.
+     */
+    private long countRecordsInTopic(String bootstrapServers, String topic) {
+        Properties props = new Properties();
+        props.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "blobshuffle-counter");
+        try (KafkaConsumer<byte[], byte[]> consumer = new KafkaConsumer<>(
+                props, new ByteArrayDeserializer(), new ByteArrayDeserializer())) {
+            List<TopicPartition> partitions = consumer.partitionsFor(topic).stream()
+                    .map(info -> new TopicPartition(info.topic(), info.partition()))
+                    .collect(Collectors.toList());
+            consumer.assign(partitions);
+            Map<TopicPartition, Long> endOffsets   = consumer.endOffsets(partitions);
+            Map<TopicPartition, Long> beginOffsets = consumer.beginningOffsets(partitions);
+            return endOffsets.entrySet().stream()
+                    .mapToLong(e -> e.getValue() - beginOffsets.get(e.getKey()))
+                    .sum();
+        }
     }
 
     private void createKafkaTopic(String bootstrapServers, String name) {
