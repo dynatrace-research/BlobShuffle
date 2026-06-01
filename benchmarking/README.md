@@ -6,6 +6,7 @@ This directory contains everything needed to benchmark BlobShuffle on Kubernetes
 - **Manifests**: Kubernetes manifests for manual deployment of BlobShuffle and the load generator
 - **Helm values**: Configuration for the [Theodolite](https://www.theodolite.rocks/) framework
 - **Theodolite definitions**: Benchmark CRD and ready-to-use execution files for the experiments described in the BlobShuffle paper
+- **Results**: Raw experiment data and the analysis notebook that reproduces all evaluation plots
 
 > **Before you start**: Update all image references in the manifests to point to the container registry where you published your BlobShuffle image (search for `<YOUR_REGISTRY>`). Similarly replace `<YOUR_S3_BUCKET>` and `<YOUR_CLUSTER_NAME>` with your own values.
 
@@ -30,13 +31,16 @@ benchmarking/
 │   ├── values.yaml                       # Base Theodolite Helm values (Kafka, Prometheus)
 │   ├── values-nodegroups.yaml            # Node affinity / topology scheduling
 │   └── values-aws-kafka-storage.yaml     # Persistent EBS volumes for Kafka
-└── theodolite/
-    ├── benchmark.yaml                    # Theodolite Benchmark CRD
-    └── executions/
-        ├── scalability/                  # Scale from 6 to 48 BlobShuffle instances
-        ├── batch-size/                   # Vary batch size from 1 MB to 128 MB
-        ├── partitioner/                  # Compare partitioning strategies
-        └── partitions/                   # Vary partitions-per-instance ratio
+├── theodolite/
+│   ├── benchmark.yaml                    # Theodolite Benchmark CRD
+│   └── executions/
+│       ├── scalability/                  # Scale from 6 to 48 BlobShuffle instances
+│       ├── batch-size/                   # Vary batch size from 1 MB to 128 MB
+│       ├── partitioner/                  # Compare partitioning strategies
+│       └── partitions/                   # Vary partitions-per-instance ratio
+└── results/
+    ├── analysis.ipynb                    # Evaluation notebook (reproduces all plots)
+    └── results-*/                        # Raw evaluation results in CSV files
 ```
 
 ---
@@ -292,11 +296,11 @@ kubectl cp \
 
 Results are organized by execution name and contain per-step metric data in CSV format.
 
-**An evaluation notebook for analyzing these results will follow soon.**
+See [`results/`](results/) for the evaluation data and the analysis notebook that reproduces all plots.
 
 ---
 
-## 5 — Cleanup
+## 4 — Cleanup
 
 ### Uninstall Theodolite
 
@@ -326,3 +330,9 @@ aws ec2 describe-volumes \
 # Delete a specific volume
 aws ec2 delete-volume --volume-id <VOLUME_ID>
 ```
+
+---
+
+## 5 — Reproduce Evaluation Plots
+
+The [`results/`](results/) directory contains the raw Theodolite CSVs from all experiments and a Jupyter notebook that reproduces all evaluation figures. See [`results/README.md`](results/README.md) for step-by-step instructions on setting up the Python environment and running the notebook.
