@@ -1,0 +1,3031 @@
+{
+  "name" : "blobshuffle",
+  "waitForResourcesEnabled" : false,
+  "resourceTypes" : [ {
+    "typeName" : "Instances",
+    "patchers" : [ {
+      "type" : "ReplicaPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : { }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "factor" : "9",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "factor" : "9",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "factor" : "9",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    } ]
+  }, {
+    "typeName" : "Instances-x3Partitions",
+    "patchers" : [ {
+      "type" : "ReplicaPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : { }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "factor" : "3",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "factor" : "3",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "factor" : "3",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    } ]
+  }, {
+    "typeName" : "Instances-x6Partitions",
+    "patchers" : [ {
+      "type" : "ReplicaPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : { }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "factor" : "6",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "factor" : "6",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "factor" : "6",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    } ]
+  }, {
+    "typeName" : "Instances-x9Partitions",
+    "patchers" : [ {
+      "type" : "ReplicaPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : { }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "factor" : "9",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "factor" : "9",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "factor" : "9",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    } ]
+  }, {
+    "typeName" : "Instances-x12Partitions",
+    "patchers" : [ {
+      "type" : "ReplicaPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : { }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "factor" : "12",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "factor" : "12",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "factor" : "12",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    } ]
+  }, {
+    "typeName" : "Instances-x15Partitions",
+    "patchers" : [ {
+      "type" : "ReplicaPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : { }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "factor" : "15",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "factor" : "15",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "factor" : "15",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    } ]
+  }, {
+    "typeName" : "Instances-x18Partitions",
+    "patchers" : [ {
+      "type" : "ReplicaPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : { }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "factor" : "18",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "factor" : "18",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "factor" : "18",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    } ]
+  }, {
+    "typeName" : "Instances-x21Partitions",
+    "patchers" : [ {
+      "type" : "ReplicaPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : { }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "factor" : "21",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "factor" : "21",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "factor" : "21",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    } ]
+  }, {
+    "typeName" : "Instances-x24Partitions",
+    "patchers" : [ {
+      "type" : "ReplicaPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : { }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "factor" : "24",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "factor" : "24",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "factor" : "24",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    } ]
+  }, {
+    "typeName" : "Instances-x27Partitions",
+    "patchers" : [ {
+      "type" : "ReplicaPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : { }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "factor" : "27",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "factor" : "27",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "factor" : "27",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    } ]
+  }, {
+    "typeName" : "Instances-x30Partitions",
+    "patchers" : [ {
+      "type" : "ReplicaPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : { }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "factor" : "30",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "factor" : "30",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    }, {
+      "type" : "GenericResourcePatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "factor" : "30",
+        "path" : "spec/partitions",
+        "type" : "integer"
+      }
+    } ]
+  } ],
+  "loadTypes" : [ {
+    "typeName" : "MessagesPerSecond",
+    "patchers" : [ {
+      "type" : "EnvVarPatcher",
+      "resource" : "shuffle-load-generator-deployment.yaml",
+      "properties" : {
+        "container" : "shuffle-load-generator",
+        "variableName" : "NUM_RECORDS_PER_SOURCE_SECOND"
+      }
+    } ]
+  }, {
+    "typeName" : "BatchDesiredBytes",
+    "patchers" : [ {
+      "type" : "EnvVarPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : {
+        "container" : "blobshuffle",
+        "variableName" : "BATCH_DESIRED_BYTES"
+      }
+    } ]
+  } ],
+  "slos" : [ {
+    "name" : "lag trend",
+    "sloType" : "lag trend",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "consumerGroup" : "blobshuffle-kstreams",
+      "externalSloUrl" : "http://localhost:80/evaluate-slope",
+      "thresholdRelToLoad" : "0.01",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "throughput",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum by (topic) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic='output'}[20s])) >= 0",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "output_throughput",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum by (topic) (rate(kafka_server_brokertopicmetrics_messagesin_total{topic='output'}[20s]))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p00",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.00, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p05",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.05, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p10",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.10, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p15",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.15, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p20",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.20, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p25",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.25, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p30",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.30, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p35",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.35, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p40",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.40, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p45",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.45, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p50",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.5, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p55",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.55, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p60",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.60, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p65",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.65, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p70",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.70, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p75",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.75, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p80",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.80, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p85",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.85, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p90",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.90, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p95",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.95, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p99",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.99, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p100",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(1.0, sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_raw",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum(rate(blobshuffle_latency_seconds_bucket[20s])) by (le)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "takeOnlyFirstMetric" : "false",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p00_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.00, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p05_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.05, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p10_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.10, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p15_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.15, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p20_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.20, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p25_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.25, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p30_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.30, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p35_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.35, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p40_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.40, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p45_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.45, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p50_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.50, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p55_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.55, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p60_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.60, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p65_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.65, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p70_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.70, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p75_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.75, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p80_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.80, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p85_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.85, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p90_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.90, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p95_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.95, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p99_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.99, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_p100_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(1.0, sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "latency_raw_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum(rate(blobshuffle_latency_seconds_bucket[540s])) by (le)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "takeOnlyFirstMetric" : "false",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "batch_size_bytes",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum(rate(batch_size_bytes_sum[20s])) / sum(rate(batch_size_bytes_count[20s]))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_requests",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum(rate(s3_objects_puts_total[20s]))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_requests",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum(rate(s3_objects_gets_total[20s]))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p05",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.05, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p10",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.10, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p15",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.15, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p20",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.20, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p25",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.25, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p30",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.30, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p35",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.35, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p40",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.40, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p45",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.45, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p50",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.50, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p55",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.55, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p60",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.60, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p65",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.65, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p70",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.70, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p75",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.75, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p80",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.80, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p85",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.85, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p90",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.90, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p95",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.95, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p99",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.99, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p100",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(1.00, sum(rate(s3_objects_put_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p05_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.05, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p10_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.10, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p15_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.15, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p20_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.20, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p25_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.25, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p30_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.30, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p35_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.35, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p40_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.40, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p45_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.45, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p50_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.50, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p55_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.55, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p60_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.60, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p65_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.65, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p70_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.70, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p75_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.75, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p80_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.80, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p85_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.85, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p90_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.90, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p95_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.95, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p99_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.99, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "put_latency_p100_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(1.00, sum(rate(s3_objects_put_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p05",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.05, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p10",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.10, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p15",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.15, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p20",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.20, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p25",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.25, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p30",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.30, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p35",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.35, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p40",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.40, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p45",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.45, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p50",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.50, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p55",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.55, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p60",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.60, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p65",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.65, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p70",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.70, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p75",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.75, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p80",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.80, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p85",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.85, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p90",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.90, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p95",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.95, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p99",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.99, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p100",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(1.0, sum(rate(s3_objects_get_latency_seconds_bucket[20s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p05_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.05, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p10_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.10, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p15_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.15, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p20_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.20, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p25_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.25, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p30_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.30, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p35_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.35, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p40_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.40, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p45_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.45, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p50_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.50, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p55_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.55, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p60_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.60, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p65_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.65, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p70_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.70, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p75_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.75, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p80_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.80, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p85_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.85, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p90_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.90, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p95_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.95, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p99_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.99, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "get_latency_p100_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(1.0, sum(rate(s3_objects_get_latency_seconds_bucket[540s])) by (le))",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_local_hits",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum(rate(s3_cache_hits_total{type=\"local\"}[20s])) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_local_misses",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum(rate(s3_cache_misses_total{type=\"local\"}[20s])) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_hits",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum(rate(s3_cache_hits_total{type=\"distributed\"}[20s])) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_misses",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum(rate(s3_cache_misses_total{type=\"distributed\"}[20s])) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p05",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.05, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p10",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.10, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p15",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.15, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p20",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.20, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p25",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.25, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p30",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.30, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p35",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.35, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p40",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.40, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p45",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.45, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p50",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.5, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p55",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.55, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p60",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.60, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p65",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.65, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p70",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.70, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p75",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.75, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p80",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.80, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p85",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.85, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p90",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.90, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p95",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.95, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p99",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.99, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p100",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(1.0, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[20s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p05_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.05, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p10_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.10, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p15_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.15, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p20_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.20, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p25_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.25, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p30_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.30, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p35_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.35, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p40_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.40, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p45_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.45, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p50_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.5, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p55_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.55, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p60_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.60, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p65_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.65, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p70_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.70, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p75_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.75, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p80_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.80, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p85_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.85, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p90_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.90, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p95_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.95, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p99_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(0.99, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cache_distributed_proxy_get_latency_p100_total",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "histogram_quantile(1.0, sum(rate(s3_cache_proxy_get_latency_seconds_bucket[540s])) by (le)) or vector(0)",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "threshold" : "0",
+      "warmup" : "360"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cpu_rate_30s",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "rate(container_cpu_usage_seconds_total{pod=~\"blobshuffle-.+\",container=\"blobshuffle\"}[30s])",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "takeOnlyFirstMetric" : "false",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cpu_rate_60s",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "rate(container_cpu_usage_seconds_total{pod=~\"blobshuffle-.+\",container=\"blobshuffle\"}[60s])",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "takeOnlyFirstMetric" : "false",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cpu_irate_30s",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "irate(container_cpu_usage_seconds_total{pod=~\"blobshuffle-.+\",container=\"blobshuffle\"}[30s])",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "takeOnlyFirstMetric" : "false",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "cpu_irate_60s",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "irate(container_cpu_usage_seconds_total{pod=~\"blobshuffle-.+\",container=\"blobshuffle\"}[60s])",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "takeOnlyFirstMetric" : "false",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "num_kstreams_instances",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "sum by(consumergroup) (kafka_consumergroup_members{consumergroup=\"blobshuffle-kstreams\"})",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "takeOnlyFirstMetric" : "false",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  }, {
+    "name" : "num_partitions",
+    "sloType" : "generic",
+    "prometheusUrl" : "http://prometheus-operated:9090",
+    "properties" : {
+      "externalSloUrl" : "http://localhost:8082",
+      "operator" : "true",
+      "promQLQuery" : "kafka_topic_partitions",
+      "queryAggregation" : "mean",
+      "repetitionAggregation" : "median",
+      "takeOnlyFirstMetric" : "false",
+      "threshold" : "0",
+      "warmup" : "120"
+    },
+    "offset" : 0
+  } ],
+  "kafkaConfig" : null,
+  "infrastructure" : {
+    "resources" : [ ],
+    "beforeActions" : [ ],
+    "afterActions" : [ ]
+  },
+  "sut" : {
+    "resources" : [ {
+      "configMap" : {
+        "name" : "blobshuffle-resources",
+        "files" : [ "input-topic.yaml", "notifications-repartition-topic.yaml", "output-topic.yaml", "blobshuffle-deployment.yaml", "blobshuffle-jgroups-service.yaml", "blobshuffle-jmx-configmap.yaml", "blobshuffle-service-monitor.yaml", "blobshuffle-service.yaml" ]
+      }
+    } ],
+    "beforeActions" : [ ],
+    "afterActions" : [ ]
+  },
+  "loadGenerator" : {
+    "resources" : [ {
+      "configMap" : {
+        "name" : "blobshuffle-load-generator-resources",
+        "files" : [ "shuffle-load-generator-service.yaml", "shuffle-load-generator-deployment.yaml" ]
+      }
+    } ],
+    "beforeActions" : [ ],
+    "afterActions" : [ ]
+  }
+}

@@ -1,0 +1,310 @@
+{
+  "executionId" : 14,
+  "name" : "blobshuffle-partitions-x3",
+  "benchmark" : "blobshuffle",
+  "load" : {
+    "loadType" : "BatchDesiredBytes",
+    "loadValues" : [ 16777216 ]
+  },
+  "resources" : {
+    "resourceType" : "Instances-x3Partitions",
+    "resourceValues" : [ 24 ]
+  },
+  "slos" : [ {
+    "name" : "throughput",
+    "properties" : { }
+  } ],
+  "execution" : {
+    "metric" : "capacity",
+    "strategy" : {
+      "name" : "FullSearch",
+      "restrictions" : [ ],
+      "guessStrategy" : "",
+      "searchStrategy" : ""
+    },
+    "loadGenerationDelay" : 30,
+    "afterTeardownDelay" : 5,
+    "duration" : 900,
+    "repetitions" : 3
+  },
+  "configOverrides" : [ {
+    "patcher" : {
+      "type" : "NodeSelectorPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : {
+        "variableName" : "nodegroup-size-12"
+      }
+    },
+    "value" : "true"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-execution"
+      }
+    },
+    "value" : "blobshuffle-partitions-x3"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-execution"
+      }
+    },
+    "value" : "blobshuffle-partitions-x3"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-execution"
+      }
+    },
+    "value" : "blobshuffle-partitions-x3"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-execution"
+      }
+    },
+    "value" : "blobshuffle-partitions-x3"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-jgroups-service.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-execution"
+      }
+    },
+    "value" : "blobshuffle-partitions-x3"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-jmx-configmap.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-execution"
+      }
+    },
+    "value" : "blobshuffle-partitions-x3"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-service-monitor.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-execution"
+      }
+    },
+    "value" : "blobshuffle-partitions-x3"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-service.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-execution"
+      }
+    },
+    "value" : "blobshuffle-partitions-x3"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "shuffle-load-generator-service.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-execution"
+      }
+    },
+    "value" : "blobshuffle-partitions-x3"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "shuffle-load-generator-deployment.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-execution"
+      }
+    },
+    "value" : "blobshuffle-partitions-x3"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-benchmark"
+      }
+    },
+    "value" : "blobshuffle"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-benchmark"
+      }
+    },
+    "value" : "blobshuffle"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-benchmark"
+      }
+    },
+    "value" : "blobshuffle"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-benchmark"
+      }
+    },
+    "value" : "blobshuffle"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-jgroups-service.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-benchmark"
+      }
+    },
+    "value" : "blobshuffle"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-jmx-configmap.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-benchmark"
+      }
+    },
+    "value" : "blobshuffle"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-service-monitor.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-benchmark"
+      }
+    },
+    "value" : "blobshuffle"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-service.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-benchmark"
+      }
+    },
+    "value" : "blobshuffle"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "shuffle-load-generator-service.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-benchmark"
+      }
+    },
+    "value" : "blobshuffle"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "shuffle-load-generator-deployment.yaml",
+      "properties" : {
+        "variableName" : "deployed-for-benchmark"
+      }
+    },
+    "value" : "blobshuffle"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "input-topic.yaml",
+      "properties" : {
+        "variableName" : "app.kubernetes.io/created-by"
+      }
+    },
+    "value" : "theodolite"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "notifications-repartition-topic.yaml",
+      "properties" : {
+        "variableName" : "app.kubernetes.io/created-by"
+      }
+    },
+    "value" : "theodolite"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "output-topic.yaml",
+      "properties" : {
+        "variableName" : "app.kubernetes.io/created-by"
+      }
+    },
+    "value" : "theodolite"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-deployment.yaml",
+      "properties" : {
+        "variableName" : "app.kubernetes.io/created-by"
+      }
+    },
+    "value" : "theodolite"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-jgroups-service.yaml",
+      "properties" : {
+        "variableName" : "app.kubernetes.io/created-by"
+      }
+    },
+    "value" : "theodolite"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-jmx-configmap.yaml",
+      "properties" : {
+        "variableName" : "app.kubernetes.io/created-by"
+      }
+    },
+    "value" : "theodolite"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-service-monitor.yaml",
+      "properties" : {
+        "variableName" : "app.kubernetes.io/created-by"
+      }
+    },
+    "value" : "theodolite"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "blobshuffle-service.yaml",
+      "properties" : {
+        "variableName" : "app.kubernetes.io/created-by"
+      }
+    },
+    "value" : "theodolite"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "shuffle-load-generator-service.yaml",
+      "properties" : {
+        "variableName" : "app.kubernetes.io/created-by"
+      }
+    },
+    "value" : "theodolite"
+  }, {
+    "patcher" : {
+      "type" : "LabelPatcher",
+      "resource" : "shuffle-load-generator-deployment.yaml",
+      "properties" : {
+        "variableName" : "app.kubernetes.io/created-by"
+      }
+    },
+    "value" : "theodolite"
+  } ]
+}
