@@ -29,7 +29,7 @@ BlobShuffle addresses both challenges by offloading the bulk data transfer to cl
 
 BlobShuffle is described in detail in the following paper:
 
-> Sören Henning, Otmar Ertl, Adriano Vogel. **BlobShuffle: Cost-Effective Repartitioning in Stream Processing Systems via Object Storage Exemplified with Kafka Streams.** *Pre-print following soon.* <!-- TODO: Update to arXiv link. -->
+> Sören Henning, Otmar Ertl, Adriano Vogel. **BlobShuffle: Cost-Effective Repartitioning in Stream Processing Systems via Object Storage Exemplified with Kafka Streams.** [Preprint](https://arxiv.org/abs/2606.03364).
 
 
 ## Architecture Overview
