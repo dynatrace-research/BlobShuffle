@@ -370,13 +370,16 @@ public class BlobShuffle<K,V> implements Closeable {
         //this.rackAssignmentRefresher.start();
     }
 
-    private void initRefresherOrFail(List<String> kafkaBootstrapServers, String applicationId) {
+    private synchronized void initRefresherOrFail(List<String> kafkaBootstrapServers, String applicationId) {
         if (this.applicationId != null && !this.applicationId.equals(applicationId)) {
             throw new RuntimeException("Different processors provided different applicationIds");
         }
         this.applicationId = applicationId;
-        if (this.adminClient != null && !this.kafkaBootstrapServers.equals(kafkaBootstrapServers)) {
-            throw new RuntimeException("Different processors provided different bootstrap servers");
+        if (this.adminClient != null) {
+            if (!this.kafkaBootstrapServers.equals(kafkaBootstrapServers)) {
+                throw new RuntimeException("Different processors provided different bootstrap servers");
+            }
+            return; // Already initialized by another processor; reuse the existing client
         }
         this.kafkaBootstrapServers = kafkaBootstrapServers;
         Properties adminProperties = new Properties();
