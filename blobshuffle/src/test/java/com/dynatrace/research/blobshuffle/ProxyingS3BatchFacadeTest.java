@@ -61,12 +61,14 @@ class ProxyingS3BatchFacadeTest {
                 s3BatchFacade1,
                 7070,
                 new StaticMemberDiscoverer("localhost:7070", "localhost:7071"),
-                new SimpleMeterRegistry());
+                new SimpleMeterRegistry(),
+                new ModuloOwnerSelectionStrategy());
              ProxyingS3BatchFacade proxyingS3BatchFacade2 = new ProxyingS3BatchFacade(
                      s3BatchFacade2,
                      7071,
                      new StaticMemberDiscoverer("localhost:7071", "localhost:7070"),
-                     new SimpleMeterRegistry())) {
+                     new SimpleMeterRegistry(),
+                     new ModuloOwnerSelectionStrategy())) {
 
             byte[] testBatch = new byte[16 * 1024 * 1024];
             proxyingS3BatchFacade1.writeBatch("test1", new ByteArrayInputStream(testBatch), testBatch.length);
@@ -96,12 +98,14 @@ class ProxyingS3BatchFacadeTest {
                 s3BatchFacade1,
                 7070,
                 new StaticMemberDiscoverer("localhost:7070", "localhost:7071"),
-                new SimpleMeterRegistry());
+                new SimpleMeterRegistry(),
+                new ModuloOwnerSelectionStrategy());
              ProxyingS3BatchFacade proxyingS3BatchFacade2 = new ProxyingS3BatchFacade(
                  s3BatchFacade2,
                  7071,
                  new StaticMemberDiscoverer("localhost:7071", "localhost:7070"),
-                 new SimpleMeterRegistry())) {
+                 new SimpleMeterRegistry(),
+                 new ModuloOwnerSelectionStrategy())) {
 
             byte[] testBatch = new byte[16 * 1024 * 1024];
             proxyingS3BatchFacade1.writeBatch("test2", new ByteArrayInputStream(testBatch), testBatch.length);
@@ -127,12 +131,14 @@ class ProxyingS3BatchFacadeTest {
                 s3BatchFacade1,
                 7070,
                 new StaticMemberDiscoverer("localhost:7070", "localhost:7071"),
-                new SimpleMeterRegistry());
+                new SimpleMeterRegistry(),
+                new ModuloOwnerSelectionStrategy());
              ProxyingS3BatchFacade proxyingS3BatchFacade2 = new ProxyingS3BatchFacade(
                      s3BatchFacade2,
                      7071,
                      new StaticMemberDiscoverer("localhost:7071", "localhost:7070"),
-                     new SimpleMeterRegistry())) {
+                     new SimpleMeterRegistry(),
+                     new ModuloOwnerSelectionStrategy())) {
 
             S3BatchFacade.SizeAwareInputStream readBatch = proxyingS3BatchFacade1.readBatch("test1");
             byte[] readBatchBytes = readBatch.readAllBytes();
@@ -157,12 +163,14 @@ class ProxyingS3BatchFacadeTest {
                 s3BatchFacade1,
                 7070,
                 new StaticMemberDiscoverer("localhost:7070", "localhost:7071"),
-                new SimpleMeterRegistry());
+                new SimpleMeterRegistry(),
+                new ModuloOwnerSelectionStrategy());
              ProxyingS3BatchFacade proxyingS3BatchFacade2 = new ProxyingS3BatchFacade(
                      s3BatchFacade2,
                      7071,
                      new StaticMemberDiscoverer("localhost:7071", "localhost:7070"),
-                     new SimpleMeterRegistry())) {
+                     new SimpleMeterRegistry(),
+                     new ModuloOwnerSelectionStrategy())) {
 
             S3BatchFacade.SizeAwareInputStream readBatch = proxyingS3BatchFacade1.readBatch("test2");
             byte[] readBatchBytes = readBatch.readAllBytes();
@@ -190,7 +198,8 @@ class ProxyingS3BatchFacadeTest {
                 localFacade,
                 7070,
                 new StaticMemberDiscoverer("localhost:7070", "localhost:7071"),
-                new SimpleMeterRegistry())) {
+                new SimpleMeterRegistry(),
+                new ModuloOwnerSelectionStrategy())) {
 
             BatchCollector batchCollector = new BatchCollector(1024 * 1024);
             batchCollector.addRecord(0, new byte[]{1, 2, 3}, new byte[]{4, 5, 6}, 0L, new RecordHeaders());
@@ -218,7 +227,8 @@ class ProxyingS3BatchFacadeTest {
                 localFacade,
                 7070,
                 new StaticMemberDiscoverer("localhost:7070", "localhost:7071"),
-                new SimpleMeterRegistry())) {
+                new SimpleMeterRegistry(),
+                new ModuloOwnerSelectionStrategy())) {
 
             S3BatchFacade.SizeAwareInputStream result = facade.readBatch("test2");
 

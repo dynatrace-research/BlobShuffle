@@ -27,13 +27,10 @@
  */
 package com.dynatrace.research.blobshuffle;
 
-import com.dynatrace.hash4j.hashing.Hasher64;
-import com.dynatrace.hash4j.hashing.Hashing;
 import io.javalin.Javalin;
 import io.javalin.http.Header;
 import io.javalin.http.HttpStatus;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.apache.kafka.common.utils.Utils;
 import org.jgroups.JChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,11 +53,11 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProxyingS3BatchFacade.class);
 
-    private final Hasher64 hasher = Hashing.komihash4_3(0x81c1f2b68968424dL);
-
     private final Javalin webserver;
 
     private final MemberDiscoverer memberDiscoverer;
+
+    private final OwnerSelectionStrategy ownerSelectionStrategy;
 
     private final HttpClient httpClient = HttpClient.newBuilder().build();
 
@@ -73,7 +70,8 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
     //private final Timer cacheReadTimer;
 
     /**
-     * Creates a new proxying facade using JGroups-based member discovery.
+     * Creates a new proxying facade using JGroups-based member discovery and consistent-hash
+     * routing ({@link ConsistentHashingOwnerSelectionStrategy}).
      *
      * @param wrapped the underlying facade
      * @param zone the availability zone (used for the JGroups cluster name)
@@ -82,18 +80,34 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
      * @param meterRegistry the meter registry for metrics
      */
     public ProxyingS3BatchFacade(S3BatchFacade wrapped, String zone, String advertisedHost, int port, MeterRegistry meterRegistry) {
-        this(wrapped, port, new JGroupsMemberDiscoverer(zone, advertisedHost + ':' + port), meterRegistry);
+        this(wrapped, zone, advertisedHost, port, meterRegistry, new ConsistentHashingOwnerSelectionStrategy());
     }
 
     /**
-     * Creates a new proxying facade with a custom member discoverer.
+     * Creates a new proxying facade using JGroups-based member discovery and a custom
+     * owner-selection strategy.
+     *
+     * @param wrapped the underlying facade
+     * @param zone the availability zone (used for the JGroups cluster name)
+     * @param advertisedHost the host:port advertised to other cache cluster members
+     * @param port the HTTP server port
+     * @param meterRegistry the meter registry for metrics
+     * @param ownerSelectionStrategy the strategy used to route objects to members
+     */
+    public ProxyingS3BatchFacade(S3BatchFacade wrapped, String zone, String advertisedHost, int port, MeterRegistry meterRegistry, OwnerSelectionStrategy ownerSelectionStrategy) {
+        this(wrapped, port, new JGroupsMemberDiscoverer(zone, advertisedHost + ':' + port), meterRegistry, ownerSelectionStrategy);
+    }
+
+    /**
+     * Creates a new proxying facade with a custom member discoverer and owner-selection strategy.
      *
      * @param wrapped the underlying facade
      * @param port the HTTP server port
      * @param memberDiscoverer the member discoverer
      * @param meterRegistry the meter registry for metrics
+     * @param ownerSelectionStrategy the strategy used to route objects to members
      */
-    public ProxyingS3BatchFacade(S3BatchFacade wrapped, int port, MemberDiscoverer memberDiscoverer, MeterRegistry meterRegistry) {
+    public ProxyingS3BatchFacade(S3BatchFacade wrapped, int port, MemberDiscoverer memberDiscoverer, MeterRegistry meterRegistry, OwnerSelectionStrategy ownerSelectionStrategy) {
         this.wrapped = wrapped;
 
         this.webserver = Javalin.create(config -> {
@@ -129,15 +143,14 @@ public class ProxyingS3BatchFacade implements S3BatchFacade {
                 .start(port);
         this.memberDiscoverer = memberDiscoverer;
 
+        this.ownerSelectionStrategy = ownerSelectionStrategy;
+
         this.metricRegistry = meterRegistry;
 
     }
 
     private String getOwnerForObjectPath(String objectPath) {
-        int objectPathHash = hasher.hashStream().putString(objectPath).getAsInt();
-        List<String> members = memberDiscoverer.getMembers().stream().sorted().toList();
-        //Collections.sort(members);
-        return members.get(Utils.toPositive(objectPathHash) % members.size());
+        return this.ownerSelectionStrategy.selectOwner(objectPath, this.memberDiscoverer.getMembers());
     }
 
     public void writeBatch(String objectPath, InputStream batchInputStream, int batchSizeInBytes) {
